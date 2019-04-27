@@ -1,15 +1,24 @@
 <template lang='pug'>
-  .container
-    canvas.app-canvas#canvas(ref='canvas') Ваш браузер слишком древний!
+  .container(@contextmenu.prevent='$refs.menu.open')
+    canvas.app-canvas#canvas(ref='canvas') Your browser is too old!
+    vue-context(ref='menu')
+      ul
+        li(@click='onClick($event.target.innerText)') Edit Node
+        li(@click='onClick($event.target.innerText)') Delete Node
     .fab(@click='addNodeClick') +
 </template>
 
 <script>
 import { fabric } from 'fabric'
+import { VueContext } from 'vue-context'
 // import { mapMutations } from 'vuex'
 
 export default {
   name: 'AppCanvas',
+
+  components: {
+    VueContext
+  },
 
   data () {
     return {
@@ -132,6 +141,9 @@ export default {
             this.submitStatus = err.message
           })
       }
+    },
+    onClick (text) {
+      alert(`You clicked ${text}!`)
     }/* ,
     nodeModified (ev) {
       var modifiedObject = ev.target
