@@ -36,6 +36,7 @@ export default {
       canvas: null,
       submitStatus: '',
       isObjectMoving: false,
+      selectedNodeId: null,
       messageDialogHandler: null
     }
   },
@@ -73,11 +74,17 @@ export default {
       width: this.width,
       height: this.height,
       selectionColor: '#90ccb7',
-      backgroundColor: '#fff'
+      backgroundColor: '#fff',
+      selection: false
     })
     this.canvas.on('object:moving', this.nodeMoving)
     this.canvas.on('mouse:up', this.nodeMouseUp)
     this.canvas.on('object:modified', this.nodeModified)
+    // this.canvas.on('object:selected', this.nodeSelected)
+    // this.canvas.on('object:deselected', this.nodeDeselected)
+    this.canvas.on('selection:created', this.selectionCreated)
+    this.canvas.on('selection:cleared', this.selectionCleared)
+    this.canvas.on('selection:updated', this.selectionUpdated)
     this.fabricBullshit(this.elems)
     // Start message
     this.messageDialogHandler = uiMessage()
@@ -155,11 +162,44 @@ export default {
             this.submitStatus = err.message
           })
       }
+    }, /*
+    nodeSelected (ev) {
+      var selectedObject = ev.target
+      console.log('nodeSelected', selectedObject.get('id'))
+    },
+    nodeDeselected (ev) {
+      var selectedObject = ev.target
+      console.log('nodeDeselected', selectedObject.get('id'))
+    }, */
+    selectionCreated (ev) {
+      var selectedObject = this.canvas.getActiveObject()
+      if (typeof (this.canvas.getActiveObject()) !== 'undefined') {
+        // selectedObject = canvas.getActiveObject()
+        console.log('selectedObject', selectedObject.get('id'))
+      }
+    },
+    selectionCleared (ev) {
+      // var selectedObject = ev.target
+      console.log('selectionCleared')
+    },
+    selectionUpdated (ev) {
+      var updatedObject = this.canvas.getActiveObject()
+      if (typeof (updatedObject) !== 'undefined') {
+        // selectedObject = canvas.getActiveObject()
+        console.log('updatedObject', updatedObject.get('id'))
+      }
     },
     onContextMenuClick (id) {
-      console.log(id, 'deleteNodeContextMenuItem', id === 'deleteNodeContextMenuItem')
       if (id === 'deleteNodeContextMenuItem') {
         this.messageDialogHandler.call()
+      } else {
+        /* var selectedObject;
+        if(typeof(canvas.getActiveObject()) !== 'undefined') {
+          selectedObject = canvas.getActiveObject()
+          console.log('selectedObject', selectedObject)
+        } else {
+          console.log('selectedObject', 'nil')
+        } */
       }
     }/* ,
     nodeModified (ev) {

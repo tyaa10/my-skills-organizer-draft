@@ -114,11 +114,16 @@ export default ({
         throw error
       }
     },
-    async loadNodes ({commit}) {
+    async loadNodes ({commit, getters}) {
       commit('clearError')
       commit('setLoading', true)
       try {
-        const nodesResponse = await firebase.database().ref('nodes').once('value')
+        const nodesResponse =
+          await firebase.database()
+            .ref('nodes')
+            .orderByChild('user')
+            .equalTo(getters.user.id)
+            .once('value')
         // console.log(nodesResponse)
         // Get value
         const nodes = nodesResponse.val()
