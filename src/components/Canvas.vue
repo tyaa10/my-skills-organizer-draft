@@ -3,14 +3,25 @@
     canvas.app-canvas#canvas(ref='canvas') Your browser is too old!
     vue-context(ref='menu')
       ul
-        li(@click='onClick($event.target.innerText)') Edit Node
-        li(@click='onClick($event.target.innerText)') Delete Node
+        li#editNodeContextMenuItem(@click='onContextMenuClick($event.target.id)') Edit Node
+        li#deleteNodeContextMenuItem(@click='onContextMenuClick($event.target.id)') Delete Node
+    .ui-messageBox__wrapper
+      .ui-messageBox.fadeInDown
+        .ui-messageBox__header
+          span.messageBox-title Delete the Node
+          span.button-close.ui-messageBox-close
+        .ui-messageBox__content
+          span Node will be deleted permanently
+        .ui-messageBox__footer
+          .button.button-light.ui-messageBox-cancel Cancel
+          .button.button-primary.ui-messageBox-ok OK
     .fab(@click='addNodeClick') +
 </template>
 
 <script>
 import { fabric } from 'fabric'
 import { VueContext } from 'vue-context'
+import { uiMessage } from '@/assets/js/uimini.js'
 // import { mapMutations } from 'vuex'
 
 export default {
@@ -24,7 +35,8 @@ export default {
     return {
       canvas: null,
       submitStatus: '',
-      isObjectMoving: false
+      isObjectMoving: false,
+      messageDialogHandler: null
     }
   },
 
@@ -67,6 +79,8 @@ export default {
     this.canvas.on('mouse:up', this.nodeMouseUp)
     this.canvas.on('object:modified', this.nodeModified)
     this.fabricBullshit(this.elems)
+    // Start message
+    this.messageDialogHandler = uiMessage()
   },
 
   methods: {
@@ -142,25 +156,14 @@ export default {
           })
       }
     },
-    onClick (text) {
-      alert(`You clicked ${text}!`)
+    onContextMenuClick (id) {
+      console.log(id, 'deleteNodeContextMenuItem', id === 'deleteNodeContextMenuItem')
+      if (id === 'deleteNodeContextMenuItem') {
+        this.messageDialogHandler.call()
+      }
     }/* ,
     nodeModified (ev) {
       var modifiedObject = ev.target
-      // console.log(modifiedObject.get('id'), modifiedObject.get('left'), modifiedObject.get('top'))
-      if (!this.isObjectMoving) {
-        console.log(modifiedObject.get('id'), modifiedObject.get('left'), modifiedObject.get('top'))
-        const id = modifiedObject.get('id')
-        const newLeft = modifiedObject.get('left')
-        const newTop = modifiedObject.get('top')
-        this.editNode({
-          id: id,
-          changes: {
-            left: newLeft,
-            top: newTop
-          }
-        })
-      }
     } */
   }
 }
