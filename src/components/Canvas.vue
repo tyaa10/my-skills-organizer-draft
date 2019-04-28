@@ -1,7 +1,11 @@
 <template lang='pug'>
-  .container(@contextmenu.prevent='$refs.menu.open')
+  .container(v-on:contextmenu.prevent='contextMenuOpen')
+    #cancelledMessage.ui-message.ui-message--danger
+      span.message-title Cancelled
+    #doneMessage.ui-message.ui-message--success
+      span.message-title Done
     canvas.app-canvas#canvas(ref='canvas') Your browser is too old!
-    vue-context(ref='menu')
+    vue-context(ref='menu' v-if="checkNode")
       ul
         li#editNodeContextMenuItem(@click='onContextMenuClick($event.target.id)') Edit Node
         li#deleteNodeContextMenuItem(@click='onContextMenuClick($event.target.id)') Delete Node
@@ -21,7 +25,7 @@
 <script>
 import { fabric } from 'fabric'
 import { VueContext } from 'vue-context'
-import { uiMessage } from '@/assets/js/uimini.js'
+import { uiMessage, showMessage } from '@/assets/js/uimini.js'
 // import { mapMutations } from 'vuex'
 
 export default {
@@ -60,6 +64,9 @@ export default {
     },
     heightCenter () {
       return this.height / 2
+    },
+    checkNode () {
+      return this.selectedNodeId !== null
     }
   },
   watch: {
@@ -87,7 +94,7 @@ export default {
     this.canvas.on('selection:updated', this.selectionUpdated)
     this.fabricBullshit(this.elems)
     // Start message
-    this.messageDialogHandler = uiMessage()
+    this.messageDialogHandler = uiMessage(this.messageDialogItOk, this.messageDialogItCancel)
   },
 
   methods: {
@@ -175,18 +182,26 @@ export default {
       var selectedObject = this.canvas.getActiveObject()
       if (typeof (this.canvas.getActiveObject()) !== 'undefined') {
         // selectedObject = canvas.getActiveObject()
-        console.log('selectedObject', selectedObject.get('id'))
+        // console.log('selectedObject', selectedObject.get('id'))
+        this.selectedNodeId = selectedObject.get('id')
       }
     },
     selectionCleared (ev) {
       // var selectedObject = ev.target
-      console.log('selectionCleared')
+      // console.log('selectionCleared')
+      this.selectedNodeId = null
     },
     selectionUpdated (ev) {
       var updatedObject = this.canvas.getActiveObject()
       if (typeof (updatedObject) !== 'undefined') {
         // selectedObject = canvas.getActiveObject()
-        console.log('updatedObject', updatedObject.get('id'))
+        // console.log('updatedObject', updatedObject.get('id'))
+        this.selectedNodeId = updatedObject.get('id')
+      }
+    },
+    contextMenuOpen (ev) {
+      if (this.$refs.menu) {
+        this.$refs.menu.open(ev)
       }
     },
     onContextMenuClick (id) {
@@ -201,6 +216,12 @@ export default {
           console.log('selectedObject', 'nil')
         } */
       }
+    },
+    messageDialogItOk () {
+      showMessage('#doneMessage')
+    },
+    messageDialogItCancel () {
+      showMessage('#cancelledMessage')
     }/* ,
     nodeModified (ev) {
       var modifiedObject = ev.target

@@ -80,7 +80,7 @@ export default {
       return store.getters.checkUser
     },
     userData () {
-      console.log('this.user', store.getters.user)
+      // console.log('this.user', store.getters.user)
       return store.getters.user
     }
   },

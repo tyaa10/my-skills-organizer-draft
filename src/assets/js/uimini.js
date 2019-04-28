@@ -109,8 +109,11 @@ function showMessage (message, messageBtn) { // eslint-disable-line no-unused-va
 //
 // Message Dialog
 //
-function uiMessage () { // eslint-disable-line no-unused-vars
+var dialogButtonsHandlers = {}
+function uiMessage (okButtonHandler, cancelButtonHandler) { // eslint-disable-line no-unused-vars
   // [i] for forEach
+  dialogButtonsHandlers['ok'] = okButtonHandler
+  dialogButtonsHandlers['cancel'] = cancelButtonHandler
   // var messageDialog = document.getElementsByClassName('ui-messageBox__wrapper')
   var uiMessageDialogBtnShow = document.getElementsByClassName('ui-messageBox-show')
   var uiMessageDialogBtnOk = document.getElementsByClassName('ui-messageBox-ok')
@@ -149,7 +152,8 @@ function uiMessage () { // eslint-disable-line no-unused-vars
       // Exit
       closeMessageDialog(i)
       // Ok func
-      messageDialogItCancel()
+      // messageDialogItCancel()
+      dialogButtonsHandlers['cancel'].call()
     })
   })
 
@@ -159,7 +163,8 @@ function uiMessage () { // eslint-disable-line no-unused-vars
       // Exit
       closeMessageDialog(i)
       // Ok func
-      messageDialogItOk()
+      // messageDialogItOk()
+      dialogButtonsHandlers['ok'].call()
     })
   })
 
@@ -179,11 +184,13 @@ function uiMessage () { // eslint-disable-line no-unused-vars
     showMessageDialog(0)
   }
 } // end message
-function messageDialogItCancel () {
+/* function messageDialogItCancel () {
+  // console.log('messageDialogItCancel')
   return true
 }
 function messageDialogItOk () {
+  // console.log('messageDialogItOk')
   return true
-}
+} */
 
-export { uiMessage }
+export { showMessage, uiMessage }
