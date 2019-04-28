@@ -71,8 +71,9 @@ export default {
   },
   watch: {
     elems (newVal, oldVal) {
-      // console.log(newVal, oldVal)
-      this.fabricBullshit(newVal.filter(n => !oldVal.includes(n)))
+      console.log(newVal, oldVal)
+      this.fabricDraw(this.elems)
+      // this.fabricDraw(newVal.filter(n => !oldVal.includes(n)))
     }
   },
 
@@ -87,19 +88,18 @@ export default {
     this.canvas.on('object:moving', this.nodeMoving)
     this.canvas.on('mouse:up', this.nodeMouseUp)
     this.canvas.on('object:modified', this.nodeModified)
-    // this.canvas.on('object:selected', this.nodeSelected)
-    // this.canvas.on('object:deselected', this.nodeDeselected)
     this.canvas.on('selection:created', this.selectionCreated)
     this.canvas.on('selection:cleared', this.selectionCleared)
     this.canvas.on('selection:updated', this.selectionUpdated)
-    this.fabricBullshit(this.elems)
+    this.fabricDraw(this.elems)
     // Start message
     this.messageDialogHandler = uiMessage(this.messageDialogItOk, this.messageDialogItCancel)
   },
 
   methods: {
     // ...mapMutations(['addElem', 'moveElem']),
-    fabricBullshit (elems) {
+    fabricDraw (elems) {
+      this.canvas.remove(...this.canvas.getObjects())
       elems.forEach(n => {
         var color = 'red'
         if (n.status === 'new') {
@@ -113,16 +113,6 @@ export default {
     },
 
     addNodeClick () {
-      /* this.addElem({
-        type: 'node',
-        attrs: {
-          id: '2a',
-          fill: 'blue',
-          radius: 50,
-          left: 0,
-          top: 0
-        }
-      }) */
       this.$store.dispatch('newNode', {
         status: 'new',
         radius: 50,
@@ -131,7 +121,7 @@ export default {
       })
         .then(() => {
           this.submitStatus = 'OK'
-          this.fabricBullshit(this.elems)
+          // this.fabricDraw(this.elems)
         })
         .catch(err => {
           this.submitStatus = err.message
@@ -148,13 +138,6 @@ export default {
         const id = modifiedObject.get('id')
         const newLeft = modifiedObject.get('left')
         const newTop = modifiedObject.get('top')
-        /* this.editNode({
-          id: id,
-          changes: {
-            left: newLeft,
-            top: newTop
-          }
-        }) */
         this.$store.dispatch('editNode', {
           id: id,
           changes: {
@@ -169,15 +152,7 @@ export default {
             this.submitStatus = err.message
           })
       }
-    }, /*
-    nodeSelected (ev) {
-      var selectedObject = ev.target
-      console.log('nodeSelected', selectedObject.get('id'))
     },
-    nodeDeselected (ev) {
-      var selectedObject = ev.target
-      console.log('nodeDeselected', selectedObject.get('id'))
-    }, */
     selectionCreated (ev) {
       var selectedObject = this.canvas.getActiveObject()
       if (typeof (this.canvas.getActiveObject()) !== 'undefined') {
@@ -218,7 +193,18 @@ export default {
       }
     },
     messageDialogItOk () {
-      showMessage('#doneMessage')
+      this.$store.dispatch('deleteNode', this.selectedNodeId)
+        .then(() => {
+          // this.canvas.clear()
+          // this.fabricDraw(this.elems)
+          showMessage('#doneMessage')
+          /* this.$store.dispatch('loadNodes')
+            .then(() => {
+              console.log('node deleted')
+              // this.fabricDraw(this.elems)
+              showMessage('#doneMessage')
+            }) */
+        })
     },
     messageDialogItCancel () {
       showMessage('#cancelledMessage')

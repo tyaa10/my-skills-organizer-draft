@@ -77,6 +77,10 @@ export default ({
       node.status = payload.status
       node.top = payload.top
       node.left = payload.left */
+    },
+    deleteNode (state, payload) {
+      const deletedNode = state.elems.find(elem => elem.id === payload.id)
+      state.elems.splice(state.elems.indexOf(deletedNode), 1)
     }
   },
   actions: {
@@ -134,7 +138,7 @@ export default ({
           // Get task key (id)
           Object.keys(nodes).forEach(key => {
             const n = nodes[key]
-            console.log(n)
+            // console.log(n)
             nodesArray.push(
               new Node(
                 n.status,
@@ -172,6 +176,19 @@ export default ({
         // Send mutation
         commit('editNode', {id, ...changes})
 
+        commit('setLoading', false)
+      } catch (error) {
+        commit('setLoading', false)
+        commit('setError', error.message)
+        throw error
+      }
+    },
+    async deleteNode ({commit}, id) {
+      commit('clearError')
+      commit('setLoading', true)
+      try {
+        await firebase.database().ref('nodes').child(id).remove()
+        commit('deleteNode', {id})
         commit('setLoading', false)
       } catch (error) {
         commit('setLoading', false)
