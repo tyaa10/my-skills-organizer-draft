@@ -34,6 +34,10 @@
                     img(:src="userData.photo" style="height: 32px; width: 32px; border-radius: 50%")
 
     router-view
+    .cssload-loader(v-show="isLoading")
+      .cssload-inner.cssload-one
+      .cssload-inner.cssload-two
+      .cssload-inner.cssload-three
 </template>
 
 <script>
@@ -82,6 +86,10 @@ export default {
     userData () {
       // console.log('this.user', store.getters.user)
       return store.getters.user
+    },
+    isLoading () {
+      // console.log('this.$store.getters.loading', this.$store.getters.loading)
+      return this.$store.getters.loading
     }
   },
   watch: {

@@ -1,20 +1,59 @@
 //
 // Sidebar
 //
-var uiSidebar = document.querySelector('.sidebar')
-var uiSidebarBtn = document.querySelector('.sidebar-open-button .button-burger')
+// var uiSidebar = document.querySelector('.sidebar')
+// var uiSidebarBtn = document.querySelector('.sidebar-open-button .button-burger')
 
-if (uiSidebarBtn) {
-  uiSidebarBtn.addEventListener('click', function () {
-    this.classList.toggle('active')
-    uiSidebar.classList.toggle('full')
-    if (this.classList.contains('active')) {
-      uiSidebar.style = 'left: 0'
-    } else {
-      uiSidebar.style = 'left: -240px'
-    }
-  })
+/* var uiSidebarVisiblityListener = function (event) { // eslint-disable-line no-unused-vars
+  // If user clicks inside the element, do nothing
+  if (event.target.closest('.sidebar')) { return }
+  // If user clicks outside the element, hide it!
+  uiSidebar.classList.remove('full')
+  uiSidebar.style = 'left: -240px'
+} */
+
+function toggleSidebar () {
+  document.querySelector('.sidebar').classList.toggle('active')
+  document.querySelector('.sidebar').classList.toggle('full')
+  if (document.querySelector('.sidebar').classList.contains('active')) {
+    document.querySelector('.sidebar').style = 'left: 0'
+    // document.addEventListener('click', uiSidebarVisiblityListener, false)
+  } else {
+    document.querySelector('.sidebar').style = 'left: -240px'
+    // document.removeEventListener('click', uiSidebarVisiblityListener, false)
+  }
 }
+
+function showSidebar () {
+  document.querySelector('.sidebar').classList.add('active')
+  document.querySelector('.sidebar').classList.add('full')
+  document.querySelector('.sidebar').style = 'left: 0'
+}
+
+function hideSidebar () {
+  document.querySelector('.sidebar').classList.remove('active')
+  document.querySelector('.sidebar').classList.remove('full')
+  document.querySelector('.sidebar').style = 'left: -240px'
+}
+
+/* if (uiSidebarBtn) {
+  uiSidebarBtn.addEventListener('click', toggleSidebar)
+} */
+
+/* //
+// Sidebar 2
+//
+
+var sidebar2CloseButton = document.querySelector('#sidebar2-closer')
+
+function toggleSidebar2 () {
+  console.log(document.querySelector('#sidebar2'))
+  document.querySelector('#sidebar2').classList.toggle('collapsed')
+}
+
+if (sidebar2CloseButton) {
+  sidebar2CloseButton.addEventListener('click', toggleSidebar2)
+} */
 
 //
 // Navbar
@@ -183,14 +222,6 @@ function uiMessage (okButtonHandler, cancelButtonHandler) { // eslint-disable-li
   return function () {
     showMessageDialog(0)
   }
-} // end message
-/* function messageDialogItCancel () {
-  // console.log('messageDialogItCancel')
-  return true
 }
-function messageDialogItOk () {
-  // console.log('messageDialogItOk')
-  return true
-} */
 
-export { showMessage, uiMessage }
+export { showMessage, uiMessage, toggleSidebar, showSidebar, hideSidebar }

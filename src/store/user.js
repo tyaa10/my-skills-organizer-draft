@@ -12,22 +12,6 @@ export default {
     }
   },
   actions: {
-    // Registration page
-    /* async registerUser ({commit}, {email, password}) {
-      commit('clearError')
-      commit('setLoading', true)
-      try {
-        // logic
-        const user = await firebase.auth().createUserWithEmailAndPassword(email, password)
-        commit('setUser', new User(user.user.uid))
-
-        commit('setLoading', false)
-      } catch (error) {
-        commit('setLoading', false)
-        commit('setError', error.message)
-        throw error
-      }
-    }, */
     // Login page
     async loginUser ({commit}, {email, password}) {
       commit('clearError')

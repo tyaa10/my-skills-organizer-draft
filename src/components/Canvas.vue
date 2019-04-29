@@ -20,12 +20,27 @@
           .button.button-light.ui-messageBox-cancel Cancel
           .button.button-primary.ui-messageBox-ok OK
     .fab(@click='addNodeClick') +
+    .sidebar-open-button
+      .button-burger
+        span.line.line-1
+        span.line.line-2
+        span.line.line-3
+    .sidebar
+      .container
+        .sidebar-content
+          // Content
+          p.ui-text-small(style='margin:16px 0 6px 0;') Basic:
+          ul.sidebar-list
+            li.sidebar-item
+              a.sidebar-link(href='#') Example link
+            li.sidebar-item
+              a.sidebar-link(href='#') Example second link
 </template>
 
 <script>
 import { fabric } from 'fabric'
 import { VueContext } from 'vue-context'
-import { uiMessage, showMessage } from '@/assets/js/uimini.js'
+import { uiMessage, showMessage, showSidebar, hideSidebar } from '@/assets/js/uimini.js'
 // import { mapMutations } from 'vuex'
 
 export default {
@@ -71,7 +86,7 @@ export default {
   },
   watch: {
     elems (newVal, oldVal) {
-      console.log(newVal, oldVal)
+      // console.log(newVal, oldVal)
       this.fabricDraw(this.elems)
       // this.fabricDraw(newVal.filter(n => !oldVal.includes(n)))
     }
@@ -165,6 +180,7 @@ export default {
       // var selectedObject = ev.target
       // console.log('selectionCleared')
       this.selectedNodeId = null
+      hideSidebar()
     },
     selectionUpdated (ev) {
       var updatedObject = this.canvas.getActiveObject()
@@ -182,7 +198,8 @@ export default {
     onContextMenuClick (id) {
       if (id === 'deleteNodeContextMenuItem') {
         this.messageDialogHandler.call()
-      } else {
+      } else if (id === 'editNodeContextMenuItem') {
+        showSidebar()
         /* var selectedObject;
         if(typeof(canvas.getActiveObject()) !== 'undefined') {
           selectedObject = canvas.getActiveObject()
