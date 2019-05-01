@@ -28,19 +28,46 @@
     .sidebar
       .container
         .sidebar-content
-          // Content
-          p.ui-text-small(style='margin:16px 0 6px 0;') Basic:
-          ul.sidebar-list
-            li.sidebar-item
-              a.sidebar-link(href='#') Example link
-            li.sidebar-item
-              a.sidebar-link(href='#') Example second link
+          form(v-on:submit.prevent='')
+            .form-group(:class="{ 'form-group--error': $v.selectedNode.title.$error }")
+              label.form__label(for='titleInput') Title
+              input.form__input#titleInput(type='text' placeholder='Title' v-model.trim="$v.selectedNode.title.$model")
+            .error(v-if="!$v.selectedNode.title.required") Field is required
+            .error(v-if="!$v.selectedNode.title.minLength") Title must have at least {{$v.selectedNode.title.$params.minLength.min}} letters
+            .error(v-if="!$v.selectedNode.title.maxLength") Title must have at most {{$v.selectedNode.title.$params.maxLength.max}} letters
+            .form-group(:class="{ 'form-group--error': $v.selectedNode.type.$error }")
+              label.form__label(for='typeSelect') Type
+              select.form__input#typeSelect(v-model.trim="$v.selectedNode.type.$model")
+                option(disabled='' value='') select type
+                option(value='1') basis
+                option(value='2') desobjectivation
+                option(value='3') objectification
+            .error(v-if="!$v.selectedNode.type.required") Field is required
+            .form-group(:class="{ 'form-group--error': $v.selectedNode.description.$error }")
+              label.form__label(for='descriptionTextarea') Description
+              textarea.form__input#descriptionTextarea(placeholder='Description …' v-model.trim="$v.selectedNode.description.$model")
+            .error(v-if="!$v.selectedNode.description.required") Field is required
+            .error(v-if="!$v.selectedNode.description.minLength") Description must have at least {{$v.selectedNode.description.$params.minLength.min}} letters
+            .error(v-if="!$v.selectedNode.description.maxLength") Description must have at most {{$v.selectedNode.description.$params.maxLength.max}} letters
+            .row
+              .col-xs-6(style='margin-bottom: 16px;')
+                ul
+                  li
+                    .ui-checkbox-wrapper
+                      input#accessCheckbox.ui-checkbox(type='checkbox' v-model='selectedNode.access')
+                      label.label--inline(for='accessCheckbox') Public
+            .row.grid-middle
+              .col-xs-6
+                button.button--round.button--big.button.button-default(type='reset' @click='resetForm') Discard
+              .col-xs-6
+                button.button--round.button--big.button.button-success(type='submit' :disabled='$v.selectedNode.$invalid' @click.prevent='applyNodeDataClick') Apply
 </template>
 
 <script>
 import { fabric } from 'fabric'
 import { VueContext } from 'vue-context'
 import { uiMessage, showMessage, showSidebar, hideSidebar } from '@/assets/js/uimini.js'
+import { required, minLength, maxLength } from 'vuelidate/lib/validators'
 // import { mapMutations } from 'vuex'
 
 export default {
@@ -56,10 +83,34 @@ export default {
       submitStatus: '',
       isObjectMoving: false,
       selectedNodeId: null,
-      messageDialogHandler: null
+      messageDialogHandler: null,
+      selectedNode: {
+        title: '',
+        description: '',
+        type: '',
+        access: false
+      },
+      formMode: '',
+      formErrors: []
     }
   },
-
+  validations: {
+    selectedNode: {
+      title: {
+        required,
+        minLength: minLength(8),
+        maxLength: maxLength(128)
+      },
+      type: {
+        required
+      },
+      description: {
+        required,
+        minLength: minLength(8),
+        maxLength: maxLength(500)
+      }
+    }
+  },
   computed: {
     elems () {
       // console.log(this.$store.getters.elems)
@@ -128,7 +179,7 @@ export default {
     },
 
     addNodeClick () {
-      this.$store.dispatch('newNode', {
+      /* this.$store.dispatch('newNode', {
         status: 'new',
         radius: 50,
         left: 0,
@@ -140,7 +191,9 @@ export default {
         })
         .catch(err => {
           this.submitStatus = err.message
-        })
+        }) */
+      this.formMode = 'create'
+      showSidebar()
     },
     nodeMoving (ev) {
       this.isObjectMoving = true
@@ -199,7 +252,9 @@ export default {
       if (id === 'deleteNodeContextMenuItem') {
         this.messageDialogHandler.call()
       } else if (id === 'editNodeContextMenuItem') {
+        this.setForm()
         showSidebar()
+        this.formMode = 'edit'
         /* var selectedObject;
         if(typeof(canvas.getActiveObject()) !== 'undefined') {
           selectedObject = canvas.getActiveObject()
@@ -225,6 +280,79 @@ export default {
     },
     messageDialogItCancel () {
       showMessage('#cancelledMessage')
+    },
+    setForm () {
+      if (this.checkNode()) {
+        this.selectedNode = this.elems.find(elem => elem.id === this.selectedNodeId)
+      }
+    },
+    checkForm (ev) {
+      if (this.title && this.type && this.description) {
+        return true
+      }
+
+      this.formErrors = []
+
+      if (!this.title) {
+        this.formErrors.push('Specify a title')
+      }
+      if (!this.type) {
+        this.formErrors.push('Select type')
+      }
+      if (!this.description) {
+        this.formErrors.push('Add a description')
+      }
+
+      ev.preventDefault()
+    },
+    applyNodeDataClick () {
+      if (this.formMode === 'create') {
+        this.$store.dispatch('newNode', {
+          title: this.selectedNode.title,
+          type: this.selectedNode.type,
+          description: this.selectedNode.description,
+          access: this.selectedNode.access,
+          status: 'new',
+          radius: 50,
+          left: 0,
+          top: 0
+        })
+          .then(() => {
+            this.submitStatus = 'OK'
+            // this.fabricDraw(this.elems)
+          })
+          .catch(err => {
+            this.submitStatus = err.message
+          })
+      } else if (this.formMode === 'edit') {
+        this.$store.dispatch('editNode', {
+          id: this.selectedNodeId,
+          changes: {
+            title: this.selectedNode.title,
+            type: this.selectedNode.type,
+            description: this.selectedNode.description,
+            access: this.selectedNode.access
+          }
+        })
+          .then(() => {
+            this.submitStatus = 'OK'
+          })
+          .catch(err => {
+            this.submitStatus = err.message
+          })
+      }
+      hideSidebar()
+      this.formMode = ''
+    },
+    resetForm () {
+      this.selectedNode = {
+        title: '',
+        description: '',
+        type: '',
+        access: false
+      }
+      hideSidebar()
+      this.formMode = ''
     }/* ,
     nodeModified (ev) {
       var modifiedObject = ev.target

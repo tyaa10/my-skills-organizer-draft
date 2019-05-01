@@ -4,46 +4,38 @@ import Node from './NodeModel'
 
 export default ({
   state: {
-    elems: [
-      /* {
-        type: 'node',
-        attrs: {
-          id: '1a',
-          fill: 'red',
-          radius: 50,
-          left: 0,
-          top: 0
-        }
-      },
-      {
-        type: 'node',
-        attrs: {
-          id: '1b',
-          fill: 'yellow',
-          radius: 50,
-          left: 150,
-          top: 150
-        }
-      },
-      {
-        type: 'node',
-        attrs: {
-          id: '1c',
-          fill: 'green',
-          radius: 50,
-          left: 200,
-          top: 300
-        }
-      } */
-    ]
+    elems: []
   },
   mutations: {
     /* addElem (state, payload) {
       state.elems.push(payload)
     }, */
-    newNode (state, {id, status, radius, top, left, user}) {
+    newNode (
+      state,
+      {
+        id,
+        title,
+        type,
+        description,
+        access,
+        status,
+        radius,
+        top,
+        left,
+        user
+      }
+    ) {
       state.elems.push({
-        id, status, radius, top, left, user
+        id,
+        title,
+        type,
+        description,
+        access,
+        status,
+        radius,
+        top,
+        left,
+        user
       })
       // console.log(state.elems)
     },
@@ -67,8 +59,12 @@ export default ({
       const oldElem = state.elems.find(elem => elem.id === payload.id)
       const newElem = {
         id: oldElem.id,
-        status: oldElem.status,
-        radius: oldElem.radius,
+        title: (payload.title !== undefined) ? payload.title : oldElem.title,
+        type: (payload.type !== undefined) ? payload.type : oldElem.type,
+        description: (payload.description !== undefined) ? payload.description : oldElem.description,
+        access: (payload.access !== undefined) ? payload.access : oldElem.access,
+        status: (payload.status !== undefined) ? payload.status : oldElem.status,
+        radius: (payload.radius !== undefined) ? payload.radius : oldElem.radius,
         left: (payload.left !== undefined) ? payload.left : oldElem.left,
         top: (payload.top !== undefined) ? payload.top : oldElem.top
       }
@@ -98,6 +94,10 @@ export default ({
       try {
         // Use helped class
         const newNode = new Node(
+          payload.title,
+          payload.type,
+          payload.description,
+          payload.access,
           payload.status,
           payload.radius,
           payload.left,
@@ -141,6 +141,10 @@ export default ({
             // console.log(n)
             nodesArray.push(
               new Node(
+                n.title,
+                n.type,
+                n.description,
+                n.access,
                 n.status,
                 n.radius,
                 n.left,

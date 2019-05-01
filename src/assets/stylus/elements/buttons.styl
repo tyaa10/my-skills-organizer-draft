@@ -53,7 +53,7 @@ button
 
 	//* DISABLE
 	&.button--disable
-	&[disable]
+	&[disabled]
 		opacity .6
 		//! Reset
     cursor not-allowed
@@ -115,6 +115,24 @@ button
 		border: 1px solid light-color
 		&:hover
 			background-color light-color
+
+//* Apply
+.button-apply
+	background-color default-color
+	&.button--plain
+		color success-color
+		border: 1px solid success-color
+		&:hover
+			background-color success-color
+
+//* Discard
+.button-discard
+	background-color default-color
+	&.button--plain
+		color danger-color
+		border: 1px solid danger-color
+		&:hover
+			background-color danger-color
 
 //! Another buttons:
 //* Close

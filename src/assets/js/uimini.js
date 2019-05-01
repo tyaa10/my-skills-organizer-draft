@@ -19,7 +19,7 @@ function toggleSidebar () {
     document.querySelector('.sidebar').style = 'left: 0'
     // document.addEventListener('click', uiSidebarVisiblityListener, false)
   } else {
-    document.querySelector('.sidebar').style = 'left: -240px'
+    document.querySelector('.sidebar').style = 'left: -320px'
     // document.removeEventListener('click', uiSidebarVisiblityListener, false)
   }
 }
@@ -33,7 +33,7 @@ function showSidebar () {
 function hideSidebar () {
   document.querySelector('.sidebar').classList.remove('active')
   document.querySelector('.sidebar').classList.remove('full')
-  document.querySelector('.sidebar').style = 'left: -240px'
+  document.querySelector('.sidebar').style = 'left: -320px'
 }
 
 /* if (uiSidebarBtn) {

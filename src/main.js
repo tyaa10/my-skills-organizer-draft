@@ -12,6 +12,11 @@ import 'firebase/database'
 // import 'firebase/storage'
 import {config} from './helpers/firebaseConfig'
 
+import Vuelidate from 'vuelidate'
+// import TreeView from 'vue-json-tree-view'
+
+Vue.use(Vuelidate)
+
 Vue.config.productionTip = false
 
 /* eslint-disable no-new */
