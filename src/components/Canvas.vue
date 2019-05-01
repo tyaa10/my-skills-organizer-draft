@@ -29,13 +29,13 @@
       .container
         .sidebar-content
           form(v-on:submit.prevent='')
-            .form-group(:class="{ 'form-group--error': $v.selectedNode.title.$error }")
+            .form-item(:class="{ 'form-group--error': $v.selectedNode.title.$error }")
               label.form__label(for='titleInput') Title
               input.form__input#titleInput(type='text' placeholder='Title' v-model.trim="$v.selectedNode.title.$model")
             .error(v-if="!$v.selectedNode.title.required") Field is required
             .error(v-if="!$v.selectedNode.title.minLength") Title must have at least {{$v.selectedNode.title.$params.minLength.min}} letters
             .error(v-if="!$v.selectedNode.title.maxLength") Title must have at most {{$v.selectedNode.title.$params.maxLength.max}} letters
-            .form-group(:class="{ 'form-group--error': $v.selectedNode.type.$error }")
+            .form-item(:class="{ 'form-group--error': $v.selectedNode.type.$error }")
               label.form__label(for='typeSelect') Type
               select.form__input#typeSelect(v-model.trim="$v.selectedNode.type.$model")
                 option(disabled='' value='') select type
@@ -43,12 +43,21 @@
                 option(value='2') desobjectivation
                 option(value='3') objectification
             .error(v-if="!$v.selectedNode.type.required") Field is required
-            .form-group(:class="{ 'form-group--error': $v.selectedNode.description.$error }")
+            .form-item(:class="{ 'form-group--error': $v.selectedNode.description.$error }")
               label.form__label(for='descriptionTextarea') Description
               textarea.form__input#descriptionTextarea(placeholder='Description …' v-model.trim="$v.selectedNode.description.$model")
             .error(v-if="!$v.selectedNode.description.required") Field is required
             .error(v-if="!$v.selectedNode.description.minLength") Description must have at least {{$v.selectedNode.description.$params.minLength.min}} letters
             .error(v-if="!$v.selectedNode.description.maxLength") Description must have at most {{$v.selectedNode.description.$params.maxLength.max}} letters
+            .form-item
+              label.form__label(for='statusSelect') Status
+              select.form__input#statusSelect(v-model='selectedNode.status')
+                option(value='1') new
+                option(value='2') scheduled
+                option(value='3') started
+                option(value='4') suspended
+                option(value='5') cancelled
+                option(value='6') done
             .row
               .col-xs-6(style='margin-bottom: 16px;')
                 ul
@@ -88,10 +97,10 @@ export default {
         title: '',
         description: '',
         type: '',
+        status: '1',
         access: false
       },
-      formMode: '',
-      formErrors: []
+      formMode: ''
     }
   },
   validations: {
@@ -113,8 +122,6 @@ export default {
   },
   computed: {
     elems () {
-      // console.log(this.$store.getters.elems)
-      // return this.$store.getters.elems.filter(n => n.type === 'node')
       return this.$store.getters.elems
     },
     width () {
@@ -167,9 +174,21 @@ export default {
     fabricDraw (elems) {
       this.canvas.remove(...this.canvas.getObjects())
       elems.forEach(n => {
-        var color = 'red'
-        if (n.status === 'new') {
-          color = 'gray'
+        var color = 'white'
+        if (n.status === '1') {
+          color = '#ccc'
+        } else if (n.status === '2' && n.dependenciesSatisfied) {
+          color = '#0066FF'
+        } else if (n.status === '2' && !n.dependenciesSatisfied) {
+          color = '#FF0000'
+        } else if (n.status === '3') {
+          color = '#FFFF00'
+        } else if (n.status === '4') {
+          color = '#999999'
+        } else if (n.status === '5') {
+          color = '#333333'
+        } else if (n.status === '6') {
+          color = '#26de81'
         }
         // console.log(n)
         var rect = new fabric.Circle({id: n.id, fill: color, radius: n.radius, top: n.top, left: n.left})
@@ -179,19 +198,7 @@ export default {
     },
 
     addNodeClick () {
-      /* this.$store.dispatch('newNode', {
-        status: 'new',
-        radius: 50,
-        left: 0,
-        top: 0
-      })
-        .then(() => {
-          this.submitStatus = 'OK'
-          // this.fabricDraw(this.elems)
-        })
-        .catch(err => {
-          this.submitStatus = err.message
-        }) */
+      this.resetForm()
       this.formMode = 'create'
       showSidebar()
     },
@@ -202,7 +209,6 @@ export default {
       if (this.isObjectMoving) {
         var modifiedObject = ev.target
         this.isObjectMoving = false
-        // console.log(modifiedObject.get('id'), modifiedObject.get('left'), modifiedObject.get('top'))
         const id = modifiedObject.get('id')
         const newLeft = modifiedObject.get('left')
         const newTop = modifiedObject.get('top')
@@ -224,22 +230,16 @@ export default {
     selectionCreated (ev) {
       var selectedObject = this.canvas.getActiveObject()
       if (typeof (this.canvas.getActiveObject()) !== 'undefined') {
-        // selectedObject = canvas.getActiveObject()
-        // console.log('selectedObject', selectedObject.get('id'))
         this.selectedNodeId = selectedObject.get('id')
       }
     },
     selectionCleared (ev) {
-      // var selectedObject = ev.target
-      // console.log('selectionCleared')
       this.selectedNodeId = null
       hideSidebar()
     },
     selectionUpdated (ev) {
       var updatedObject = this.canvas.getActiveObject()
       if (typeof (updatedObject) !== 'undefined') {
-        // selectedObject = canvas.getActiveObject()
-        // console.log('updatedObject', updatedObject.get('id'))
         this.selectedNodeId = updatedObject.get('id')
       }
     },
@@ -255,55 +255,21 @@ export default {
         this.setForm()
         showSidebar()
         this.formMode = 'edit'
-        /* var selectedObject;
-        if(typeof(canvas.getActiveObject()) !== 'undefined') {
-          selectedObject = canvas.getActiveObject()
-          console.log('selectedObject', selectedObject)
-        } else {
-          console.log('selectedObject', 'nil')
-        } */
       }
     },
     messageDialogItOk () {
       this.$store.dispatch('deleteNode', this.selectedNodeId)
         .then(() => {
-          // this.canvas.clear()
-          // this.fabricDraw(this.elems)
           showMessage('#doneMessage')
-          /* this.$store.dispatch('loadNodes')
-            .then(() => {
-              console.log('node deleted')
-              // this.fabricDraw(this.elems)
-              showMessage('#doneMessage')
-            }) */
         })
     },
     messageDialogItCancel () {
       showMessage('#cancelledMessage')
     },
     setForm () {
-      if (this.checkNode()) {
+      if (this.checkNode) {
         this.selectedNode = this.elems.find(elem => elem.id === this.selectedNodeId)
       }
-    },
-    checkForm (ev) {
-      if (this.title && this.type && this.description) {
-        return true
-      }
-
-      this.formErrors = []
-
-      if (!this.title) {
-        this.formErrors.push('Specify a title')
-      }
-      if (!this.type) {
-        this.formErrors.push('Select type')
-      }
-      if (!this.description) {
-        this.formErrors.push('Add a description')
-      }
-
-      ev.preventDefault()
     },
     applyNodeDataClick () {
       if (this.formMode === 'create') {
@@ -312,7 +278,8 @@ export default {
           type: this.selectedNode.type,
           description: this.selectedNode.description,
           access: this.selectedNode.access,
-          status: 'new',
+          status: this.selectedNode.status,
+          dependenciesSatisfied: false,
           radius: 50,
           left: 0,
           top: 0
@@ -331,11 +298,13 @@ export default {
             title: this.selectedNode.title,
             type: this.selectedNode.type,
             description: this.selectedNode.description,
+            status: this.selectedNode.status,
             access: this.selectedNode.access
           }
         })
           .then(() => {
             this.submitStatus = 'OK'
+            this.fabricDraw(this.elems)
           })
           .catch(err => {
             this.submitStatus = err.message
@@ -349,6 +318,7 @@ export default {
         title: '',
         description: '',
         type: '',
+        status: '1',
         access: false
       }
       hideSidebar()

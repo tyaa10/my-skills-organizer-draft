@@ -6,6 +6,7 @@ export default class NodeModel {
     description,
     access,
     status,
+    dependenciesSatisfied,
     radius,
     left,
     top,
@@ -17,6 +18,7 @@ export default class NodeModel {
     this.description = description
     this.access = access
     this.status = status
+    this.dependenciesSatisfied = dependenciesSatisfied
     this.radius = radius
     this.left = left
     this.top = top
