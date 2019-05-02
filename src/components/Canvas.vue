@@ -5,9 +5,11 @@
     #doneMessage.ui-message.ui-message--success
       span.message-title Done
     canvas.app-canvas#canvas(ref='canvas') Your browser is too old!
+    // Context Menu
     vue-context(ref='menu' v-if="checkNode")
       ul
         li#editNodeContextMenuItem(@click='onContextMenuClick($event.target.id)') Edit Node
+        li#addDependencyContextMenuItem(@click='onContextMenuClick($event.target.id)') Add Dependency
         li#deleteNodeContextMenuItem(@click='onContextMenuClick($event.target.id)') Delete Node
     .ui-messageBox__wrapper
       .ui-messageBox.fadeInDown
@@ -100,7 +102,9 @@ export default {
         status: '1',
         access: false
       },
-      formMode: ''
+      formMode: '',
+      dependenceCreationHint: null,
+      dependentNodeId: null
     }
   },
   validations: {
@@ -164,6 +168,8 @@ export default {
     this.canvas.on('selection:created', this.selectionCreated)
     this.canvas.on('selection:cleared', this.selectionCleared)
     this.canvas.on('selection:updated', this.selectionUpdated)
+    this.canvas.on('mouse:move', this.mouseMove)
+    this.canvas.on('mouse:down', this.mouseDown)
     this.fabricDraw(this.elems)
     // Start message
     this.messageDialogHandler = uiMessage(this.messageDialogItOk, this.messageDialogItCancel)
@@ -193,6 +199,7 @@ export default {
         // console.log(n)
         var rect = new fabric.Circle({id: n.id, fill: color, radius: n.radius, top: n.top, left: n.left})
         this.canvas.add(rect)
+        this.canvas.sendToBack(rect)
       }
       )
     },
@@ -243,6 +250,28 @@ export default {
         this.selectedNodeId = updatedObject.get('id')
       }
     },
+    // Handle mousemove when dependence creation hint is shown
+    mouseMove (ev) {
+      /* if (this.dependenceCreationHint !== null) {
+        this.dependenceCreationHint.left = (ev.e.clientX - this.dependenceCreationHint.width / 4)
+        this.dependenceCreationHint.top = (ev.e.clientY - this.dependenceCreationHint.height / 4)
+        this.dependenceCreationHint.setCoords()
+        this.canvas.renderAll()
+      } */
+    },
+    // Handle mousedown when dependence creation is finishing
+    mouseDown (ev) {
+      if (this.dependenceCreationHint !== null) {
+        if (ev.target && this.checkNode) {
+          console.log(this.selectedNodeId)
+        } else {
+          console.log('dependency creation is cancelled')
+        }
+        this.canvas.remove(this.dependenceCreationHint)
+        this.dependenceCreationHint = null
+        this.dependentNodeId = null
+      }
+    },
     contextMenuOpen (ev) {
       if (this.$refs.menu) {
         this.$refs.menu.open(ev)
@@ -251,6 +280,14 @@ export default {
     onContextMenuClick (id) {
       if (id === 'deleteNodeContextMenuItem') {
         this.messageDialogHandler.call()
+      } else if (id === 'addDependencyContextMenuItem') {
+        // TODO
+        var hintText = new fabric.Text('Select parent node', {top: this.canvas.getActiveObject().top - 20, left: this.canvas.getActiveObject().left, fontSize: 20})
+        this.canvas.insertAt(hintText, this.canvas.getObjects().length)
+        hintText.hasControls = hintText.hasBorders = hintText.selectable = false
+        // hintText.bringToFront()
+        this.dependenceCreationHint = hintText
+        this.dependentNodeId = this.selectedNodeId
       } else if (id === 'editNodeContextMenuItem') {
         this.setForm()
         showSidebar()
