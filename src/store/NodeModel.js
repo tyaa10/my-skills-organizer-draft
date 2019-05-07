@@ -1,4 +1,4 @@
-// Helped class for Node
+// Model class for Node
 export default class NodeModel {
   constructor (
     title,
@@ -10,7 +10,7 @@ export default class NodeModel {
     radius,
     left,
     top,
-    user = null,
+    // user = null,
     id = null
   ) {
     this.title = title
@@ -22,7 +22,7 @@ export default class NodeModel {
     this.radius = radius
     this.left = left
     this.top = top
-    this.user = user
+    // this.user = user
     this.id = id
   }
 }

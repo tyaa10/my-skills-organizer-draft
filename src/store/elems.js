@@ -22,8 +22,8 @@ export default ({
         dependenciesSatisfied,
         radius,
         top,
-        left,
-        user
+        left// ,
+        // user
       }
     ) {
       state.elems.push({
@@ -36,8 +36,8 @@ export default ({
         dependenciesSatisfied,
         radius,
         top,
-        left,
-        user
+        left// ,
+        // user
       })
       // console.log(state.elems)
     },
@@ -105,10 +105,10 @@ export default ({
           payload.dependenciesSatisfied,
           payload.radius,
           payload.left,
-          payload.top,
-          getters.user.id
+          payload.top// ,
+          // getters.user.id
         )
-        const node = await firebase.database().ref('nodes').push(newNode)
+        const node = await firebase.database().ref(getters.user.id + '/nodes').push(newNode)
         // Send mutation
         commit('newNode', {
           ...newNode,
@@ -128,9 +128,9 @@ export default ({
       try {
         const nodesResponse =
           await firebase.database()
-            .ref('nodes')
-            .orderByChild('user')
-            .equalTo(getters.user.id)
+            .ref(getters.user.id + '/nodes')
+            // .orderByChild('user')
+            // .equalTo(getters.user.id)
             .once('value')
         // console.log(nodesResponse)
         // Get value
@@ -154,7 +154,7 @@ export default ({
                 n.radius,
                 n.left,
                 n.top,
-                n.user,
+                // n.user,
                 key
               )
             )
@@ -174,12 +174,12 @@ export default ({
       // console.log('act')
       commit('moveElem', payload)
     } */
-    async editNode ({commit}, {id, changes}) {
+    async editNode ({commit, getters}, {id, changes}) {
       commit('clearError')
       commit('setLoading', true)
       try {
         // Update data fields
-        await firebase.database().ref('nodes').child(id).update({
+        await firebase.database().ref(getters.user.id + '/nodes').child(id).update({
           ...changes
         })
         // Send mutation
@@ -192,11 +192,11 @@ export default ({
         throw error
       }
     },
-    async deleteNode ({commit}, id) {
+    async deleteNode ({commit, getters}, id) {
       commit('clearError')
       commit('setLoading', true)
       try {
-        await firebase.database().ref('nodes').child(id).remove()
+        await firebase.database().ref(getters.user.id + '/nodes').child(id).remove()
         commit('deleteNode', {id})
         commit('setLoading', false)
       } catch (error) {
