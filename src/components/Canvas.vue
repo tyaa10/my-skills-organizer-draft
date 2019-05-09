@@ -128,6 +128,9 @@ export default {
     elems () {
       return this.$store.getters.elems
     },
+    deps () {
+      return this.$store.getters.deps
+    },
     width () {
       // return (70 * this.$parent.$el.clientWidth) / 100
       return this.$parent.$el.clientWidth
@@ -149,8 +152,11 @@ export default {
   watch: {
     elems (newVal, oldVal) {
       // console.log(newVal, oldVal)
-      this.fabricDraw(this.elems)
+      this.fabricDraw(this.elems, this.deps)
       // this.fabricDraw(newVal.filter(n => !oldVal.includes(n)))
+    },
+    deps (newVal, oldVal) {
+      this.fabricDraw(this.elems, this.deps)
     }
   },
 
@@ -170,14 +176,14 @@ export default {
     this.canvas.on('selection:updated', this.selectionUpdated)
     this.canvas.on('mouse:move', this.mouseMove)
     this.canvas.on('mouse:down', this.mouseDown)
-    this.fabricDraw(this.elems)
+    this.fabricDraw(this.elems, this.deps)
     // Start message
     this.messageDialogHandler = uiMessage(this.messageDialogItOk, this.messageDialogItCancel)
   },
 
   methods: {
     // ...mapMutations(['addElem', 'moveElem']),
-    fabricDraw (elems) {
+    fabricDraw (elems, deps) {
       this.canvas.remove(...this.canvas.getObjects())
       elems.forEach(n => {
         var color = 'white'
@@ -202,6 +208,8 @@ export default {
         this.canvas.sendToBack(rect)
       }
       )
+      console.log(deps)
+      this.drawLines(elems, deps)
     },
 
     addNodeClick () {
@@ -227,6 +235,7 @@ export default {
           }
         })
           .then(() => {
+            // this.drawLines(this.elems, this.deps)
             this.submitStatus = 'OK'
           })
           .catch(err => {
@@ -252,18 +261,31 @@ export default {
     },
     // Handle mousemove when dependence creation hint is shown
     mouseMove (ev) {
-      /* if (this.dependenceCreationHint !== null) {
-        this.dependenceCreationHint.left = (ev.e.clientX - this.dependenceCreationHint.width / 4)
-        this.dependenceCreationHint.top = (ev.e.clientY - this.dependenceCreationHint.height / 4)
-        this.dependenceCreationHint.setCoords()
-        this.canvas.renderAll()
-      } */
+      if (this.isObjectMoving) {
+        var modifiedObject = ev.target
+        const id = modifiedObject.get('id')
+        const newLeft = modifiedObject.get('left')
+        const newTop = modifiedObject.get('top')
+        // console.log(id, newLeft, newTop, this.deps)
+        this.moveLine(id, newLeft, newTop, this.deps)
+      }
     },
     // Handle mousedown when dependence creation is finishing
     mouseDown (ev) {
       if (this.dependenceCreationHint !== null) {
         if (ev.target && this.checkNode) {
-          console.log(this.selectedNodeId)
+          // console.log(this.selectedNodeId)
+          this.$store.dispatch('newDep', {
+            fromNodeId: this.dependentNodeId,
+            toNodeId: this.selectedNodeId
+          })
+            .then(() => {
+              this.submitStatus = 'OK'
+              // this.fabricDraw(this.elems)
+            })
+            .catch(err => {
+              this.submitStatus = err.message
+            })
         } else {
           console.log('dependency creation is cancelled')
         }
@@ -341,7 +363,7 @@ export default {
         })
           .then(() => {
             this.submitStatus = 'OK'
-            this.fabricDraw(this.elems)
+            this.fabricDraw(this.elems, this.deps)
           })
           .catch(err => {
             this.submitStatus = err.message
@@ -360,6 +382,143 @@ export default {
       }
       hideSidebar()
       this.formMode = ''
+    },
+    makeLine (id, coords) {
+      return new fabric.Line(coords, {
+        id: id,
+        fill: '#999999',
+        stroke: '#999999',
+        strokeWidth: 5,
+        selectable: false,
+        evented: true
+      })
+    },
+    makeArrow (lineId, x1, y1, x2, y2) {
+      // координаты центра отрезка
+      const x3 = (x1 + x2) / 2
+      const y3 = (y1 + y2) / 2
+      // длина отрезка
+      const d = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+      // координаты вектора
+      const x = x2 - x1
+      const y = y2 - y1
+      // координаты точки, удалённой от центра к началу отрезка на 10px
+      const x4 = x3 - (x / d) * 10
+      const y4 = y3 - (y / d) * 10
+      const xp = y2 - y1
+      const yp = x1 - x2
+      // координаты перпендикуляров, удалённых от точки X4;Y4 на 5px в разные стороны
+      const x5 = x4 + (xp / d) * 5
+      const y5 = y4 + (yp / d) * 5
+      const x6 = x4 - (xp / d) * 5
+      const y6 = y4 - (yp / d) * 5
+      return {
+        'arrow1': new fabric.Line([x5, y5, x3, y3], {
+          id: lineId + '_a1',
+          fill: '#999999',
+          stroke: '#999999',
+          strokeWidth: 5,
+          selectable: false,
+          evented: false
+        }),
+        'arrow2': new fabric.Line([x6, y6, x3, y3], {
+          id: lineId + '_a2',
+          fill: '#999999',
+          stroke: '#999999',
+          strokeWidth: 5,
+          selectable: false,
+          evented: false
+        })
+      }
+    },
+    drawLines (elems, deps) {
+      this.canvas.remove(...this.canvas.getObjects().filter(o => o.get('type') === 'line'))
+      deps.forEach(d => {
+        const nodeFrom = elems.filter(n => n.id === d.fromNodeId)
+        const nodeTo = elems.filter(n => n.id === d.toNodeId)
+        var line = this.makeLine(d.id, [ nodeFrom[0].left + 50, nodeFrom[0].top + 50, nodeTo[0].left + 50, nodeTo[0].top + 50 ])
+        var arrow = this.makeArrow(d.id, nodeFrom[0].left + 50, nodeFrom[0].top + 50, nodeTo[0].left + 50, nodeTo[0].top + 50)
+        // console.log(arrow)
+        this.canvas.add(line, arrow.arrow1, arrow.arrow2)
+        this.canvas.sendToBack(line)
+        this.canvas.sendToBack(arrow.arrow1)
+        this.canvas.sendToBack(arrow.arrow2)
+        this.canvas.renderAll()
+      }
+      )
+    },
+    moveLine (nodeId, newLeft, newTop, deps) {
+      // console.log(nodeId, newLeft, newTop, deps)
+      const depsFromIds = deps.filter(d => d.fromNodeId === nodeId).map(d => d.id)
+      const depsToIds = deps.filter(d => d.toNodeId === nodeId).map(d => d.id)
+      const lines = this.canvas.getObjects().filter(o => o.get('type') === 'line')
+      // console.log(depsFromIds, depsToIds, lines)
+      // console.log('from')
+      lines.filter(l => depsFromIds.includes(l.get('id'))).forEach(l => {
+        const newLineX1 = newLeft + 50
+        const newLineY1 = newTop + 50
+        const newLineX2 = l.get('x2')
+        const newLineY2 = l.get('y2')
+        l.set({ 'x1': newLineX1, 'y1': newLineY1 })
+        const lineId = l.get('id')
+        const lineArrow1 = lines.filter(la1 => la1.get('id') === lineId + '_a1')[0]
+        const lineArrow2 = lines.filter(la2 => la2.get('id') === lineId + '_a2')[0]
+        const newLineArrow = this.makeArrow(lineId, newLineX1, newLineY1, newLineX2, newLineY2)
+        lineArrow1.set({
+          'x1': newLineArrow.arrow1.get('x1'),
+          'y1': newLineArrow.arrow1.get('y1'),
+          'x2': newLineArrow.arrow1.get('x2'),
+          'y2': newLineArrow.arrow1.get('y2')
+        })
+        lineArrow2.set({
+          'x1': newLineArrow.arrow2.get('x1'),
+          'y1': newLineArrow.arrow2.get('y1'),
+          'x2': newLineArrow.arrow2.get('x2'),
+          'y2': newLineArrow.arrow2.get('y2')
+        })
+        this.canvas.sendToBack(lineArrow1)
+        this.canvas.sendToBack(lineArrow2)
+      }
+      )
+      // console.log('to')
+      lines.filter(l => depsToIds.includes(l.get('id'))).forEach(l => {
+        const newLineX1 = l.get('x1')
+        const newLineY1 = l.get('y1')
+        const newLineX2 = newLeft + 50
+        const newLineY2 = newTop + 50
+        l.set({ 'x2': newLineX2, 'y2': newLineY2 })
+        const lineId = l.get('id')
+        const lineArrow1 = lines.filter(la1 => la1.get('id') === lineId + '_a1')[0]
+        const lineArrow2 = lines.filter(la2 => la2.get('id') === lineId + '_a2')[0]
+        const newLineArrow = this.makeArrow(lineId, newLineX1, newLineY1, newLineX2, newLineY2)
+        lineArrow1.set({
+          'x1': newLineArrow.arrow1.get('x1'),
+          'y1': newLineArrow.arrow1.get('y1'),
+          'x2': newLineArrow.arrow1.get('x2'),
+          'y2': newLineArrow.arrow1.get('y2')
+        })
+        lineArrow2.set({
+          'x1': newLineArrow.arrow2.get('x1'),
+          'y1': newLineArrow.arrow2.get('y1'),
+          'x2': newLineArrow.arrow2.get('x2'),
+          'y2': newLineArrow.arrow2.get('y2')
+        })
+        this.canvas.sendToBack(lineArrow1)
+        this.canvas.sendToBack(lineArrow2)
+      }
+      )
+      this.canvas.renderAll()
+      // this.canvas.remove(...lines.filter(o => o.get('id') === 'line'))
+      /* deps.forEach(d => {
+        const nodeFrom = elems.filter(n => n.id === d.fromNodeId)
+        const nodeTo = elems.filter(n => n.id === d.toNodeId)
+        var line = this.makeLine([ nodeFrom[0].left + 50, nodeFrom[0].top + 50, nodeTo[0].left + 50, nodeTo[0].top + 50 ])
+        // console.log(line)
+        this.canvas.add(line)
+        this.canvas.sendToBack(line)
+        this.canvas.renderAll()
+      }
+      ) */
     }/* ,
     nodeModified (ev) {
       var modifiedObject = ev.target

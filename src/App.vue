@@ -65,6 +65,7 @@ export default {
       if (user) {
         store.dispatch('loggedUser', user)
         store.dispatch('loadNodes', user)
+        store.dispatch('loadDeps', user)
         /* this.user = user
         this.name = user.displayName
         this.email = user.email
