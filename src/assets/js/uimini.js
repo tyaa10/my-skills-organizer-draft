@@ -47,7 +47,6 @@ function hideSidebar () {
 var sidebar2CloseButton = document.querySelector('#sidebar2-closer')
 
 function toggleSidebar2 () {
-  console.log(document.querySelector('#sidebar2'))
   document.querySelector('#sidebar2').classList.toggle('collapsed')
 }
 
@@ -106,7 +105,6 @@ function showMessage (message, messageBtn) { // eslint-disable-line no-unused-va
   var timeOut = 2000
   // Becouse animation: fadeOutUp .3s
   var timeOutUp = timeOut - 1700
-  // console.log(uiMessageBtn)
 
   // Only Message without button
   if (uiMessageBtn.length === 0) {
@@ -148,8 +146,8 @@ function showMessage (message, messageBtn) { // eslint-disable-line no-unused-va
 //
 // Message Dialog
 //
-var dialogButtonsHandlers = {}
 function uiMessage (okButtonHandler, cancelButtonHandler) { // eslint-disable-line no-unused-vars
+  var dialogButtonsHandlers = {}
   // [i] for forEach
   dialogButtonsHandlers['ok'] = okButtonHandler
   dialogButtonsHandlers['cancel'] = cancelButtonHandler
@@ -160,7 +158,9 @@ function uiMessage (okButtonHandler, cancelButtonHandler) { // eslint-disable-li
   var uiMessageDialogBtnClose = document.getElementsByClassName('ui-messageBox-close')
   // Event for Show
   Array.prototype.forEach.call(uiMessageDialogBtnShow, function (element, i) {
-    element.addEventListener('click', function () {
+    var newElement = element.cloneNode(true)
+    element.parentNode.replaceChild(newElement, element)
+    newElement.addEventListener('click', function () {
       showMessageDialog(i)
     })
   })
@@ -187,7 +187,9 @@ function uiMessage (okButtonHandler, cancelButtonHandler) { // eslint-disable-li
   // закрывается 1. вторая без изменений
   // решение - новая функция+класс для окна с кенцел
   Array.prototype.forEach.call(uiMessageDialogBtnCancel, function (element, i) {
-    element.addEventListener('click', function () {
+    var newElement = element.cloneNode(true)
+    element.parentNode.replaceChild(newElement, element)
+    newElement.addEventListener('click', function () {
       // Exit
       closeMessageDialog(i)
       // Ok func
@@ -198,7 +200,9 @@ function uiMessage (okButtonHandler, cancelButtonHandler) { // eslint-disable-li
 
   // Event for Close OK
   Array.prototype.forEach.call(uiMessageDialogBtnOk, function (element, i) {
-    element.addEventListener('click', function () {
+    var newElement = element.cloneNode(true)
+    element.parentNode.replaceChild(newElement, element)
+    newElement.addEventListener('click', function () {
       // Exit
       closeMessageDialog(i)
       // Ok func

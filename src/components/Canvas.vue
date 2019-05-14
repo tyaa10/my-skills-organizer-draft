@@ -6,11 +6,13 @@
       span.message-title Done
     canvas.app-canvas#canvas(ref='canvas') Your browser is too old!
     // Context Menu
-    vue-context(ref='menu' v-if="checkNode")
+    vue-context(ref='menu' v-if="checkNode || checkDep")
       ul
-        li#editNodeContextMenuItem(@click='onContextMenuClick($event.target.id)') Edit Node
-        li#addDependencyContextMenuItem(@click='onContextMenuClick($event.target.id)') Add Dependency
-        li#deleteNodeContextMenuItem(@click='onContextMenuClick($event.target.id)') Delete Node
+        li#editNodeContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkNode") Edit Node
+        li#addDependencyContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkNode") Add Dependency
+        li#deleteNodeContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkNode") Delete Node
+        li#deleteDepContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkDep") Delete Dependency
+    // Dialog Box - Delete or not delete the node
     .ui-messageBox__wrapper
       .ui-messageBox.fadeInDown
         .ui-messageBox__header
@@ -94,7 +96,9 @@ export default {
       submitStatus: '',
       isObjectMoving: false,
       selectedNodeId: null,
-      messageDialogHandler: null,
+      selectedDepId: null,
+      nodeDeleteDialogHandler: null,
+      depDeleteDialogHandler: null,
       selectedNode: {
         title: '',
         description: '',
@@ -147,11 +151,13 @@ export default {
     },
     checkNode () {
       return this.selectedNodeId !== null
+    },
+    checkDep () {
+      return this.selectedDepId !== null
     }
   },
   watch: {
     elems (newVal, oldVal) {
-      // console.log(newVal, oldVal)
       this.fabricDraw(this.elems, this.deps)
       // this.fabricDraw(newVal.filter(n => !oldVal.includes(n)))
     },
@@ -178,7 +184,8 @@ export default {
     this.canvas.on('mouse:down', this.mouseDown)
     this.fabricDraw(this.elems, this.deps)
     // Start message
-    this.messageDialogHandler = uiMessage(this.messageDialogItOk, this.messageDialogItCancel)
+    // this.nodeDeleteDialogHandler = uiMessage(this.nodeDeleteDialogItOk, this.nodeDeleteDialogItCancel)
+    // this.depDeleteDialogHandler = uiMessage(this.depDeleteDialogItOk, this.depDeleteDialogItCancel)
   },
 
   methods: {
@@ -202,13 +209,11 @@ export default {
         } else if (n.status === '6') {
           color = '#26de81'
         }
-        // console.log(n)
         var rect = new fabric.Circle({id: n.id, fill: color, radius: n.radius, top: n.top, left: n.left})
         this.canvas.add(rect)
         this.canvas.sendToBack(rect)
       }
       )
-      console.log(deps)
       this.drawLines(elems, deps)
     },
 
@@ -235,7 +240,6 @@ export default {
           }
         })
           .then(() => {
-            // this.drawLines(this.elems, this.deps)
             this.submitStatus = 'OK'
           })
           .catch(err => {
@@ -246,17 +250,30 @@ export default {
     selectionCreated (ev) {
       var selectedObject = this.canvas.getActiveObject()
       if (typeof (this.canvas.getActiveObject()) !== 'undefined') {
-        this.selectedNodeId = selectedObject.get('id')
+        this.selectedNodeId = null
+        this.selectedDepId = null
+        if (this.canvas.getActiveObject().get('type') === 'circle') {
+          this.selectedNodeId = selectedObject.get('id')
+        } else if (this.canvas.getActiveObject().get('type') === 'line') {
+          this.selectedDepId = selectedObject.get('id')
+        }
       }
     },
     selectionCleared (ev) {
       this.selectedNodeId = null
+      this.selectedDepId = null
       hideSidebar()
     },
     selectionUpdated (ev) {
       var updatedObject = this.canvas.getActiveObject()
       if (typeof (updatedObject) !== 'undefined') {
-        this.selectedNodeId = updatedObject.get('id')
+        this.selectedNodeId = null
+        this.selectedDepId = null
+        if (this.canvas.getActiveObject().get('type') === 'circle') {
+          this.selectedNodeId = updatedObject.get('id')
+        } else if (this.canvas.getActiveObject().get('type') === 'line') {
+          this.selectedDepId = updatedObject.get('id')
+        }
       }
     },
     // Handle mousemove when dependence creation hint is shown
@@ -266,7 +283,6 @@ export default {
         const id = modifiedObject.get('id')
         const newLeft = modifiedObject.get('left')
         const newTop = modifiedObject.get('top')
-        // console.log(id, newLeft, newTop, this.deps)
         this.moveLine(id, newLeft, newTop, this.deps)
       }
     },
@@ -274,7 +290,6 @@ export default {
     mouseDown (ev) {
       if (this.dependenceCreationHint !== null) {
         if (ev.target && this.checkNode) {
-          // console.log(this.selectedNodeId)
           this.$store.dispatch('newDep', {
             fromNodeId: this.dependentNodeId,
             toNodeId: this.selectedNodeId
@@ -301,7 +316,8 @@ export default {
     },
     onContextMenuClick (id) {
       if (id === 'deleteNodeContextMenuItem') {
-        this.messageDialogHandler.call()
+        this.nodeDeleteDialogHandler = uiMessage(this.nodeDeleteDialogItOk, this.nodeDeleteDialogItCancel)
+        this.nodeDeleteDialogHandler.call()
       } else if (id === 'addDependencyContextMenuItem') {
         // TODO
         var hintText = new fabric.Text('Select parent node', {top: this.canvas.getActiveObject().top - 20, left: this.canvas.getActiveObject().left, fontSize: 20})
@@ -314,15 +330,31 @@ export default {
         this.setForm()
         showSidebar()
         this.formMode = 'edit'
+      } else if (id === 'deleteDepContextMenuItem') {
+        this.depDeleteDialogHandler = uiMessage(this.depDeleteDialogItOk, this.depDeleteDialogItCancel)
+        this.depDeleteDialogHandler.call()
       }
     },
-    messageDialogItOk () {
+    nodeDeleteDialogItOk () {
       this.$store.dispatch('deleteNode', this.selectedNodeId)
         .then(() => {
+          this.nodeDeleteDialogHandler = null
           showMessage('#doneMessage')
         })
     },
-    messageDialogItCancel () {
+    nodeDeleteDialogItCancel () {
+      this.nodeDeleteDialogHandler = null
+      showMessage('#cancelledMessage')
+    },
+    depDeleteDialogItOk () {
+      this.$store.dispatch('deleteDep', this.selectedDepId)
+        .then(() => {
+          this.depDeleteDialogHandler = null
+          showMessage('#doneMessage')
+        })
+    },
+    depDeleteDialogItCancel () {
+      this.depDeleteDialogHandler = null
       showMessage('#cancelledMessage')
     },
     setForm () {
@@ -389,8 +421,11 @@ export default {
         fill: '#999999',
         stroke: '#999999',
         strokeWidth: 5,
-        selectable: false,
-        evented: true
+        selectable: true,
+        evented: true,
+        hasControls: false,
+        lockMovementX: true,
+        lockMovementY: true
       })
     },
     makeArrow (lineId, x1, y1, x2, y2) {
@@ -433,27 +468,38 @@ export default {
     },
     drawLines (elems, deps) {
       this.canvas.remove(...this.canvas.getObjects().filter(o => o.get('type') === 'line'))
+      var lostLinesIds = []
       deps.forEach(d => {
         const nodeFrom = elems.filter(n => n.id === d.fromNodeId)
         const nodeTo = elems.filter(n => n.id === d.toNodeId)
-        var line = this.makeLine(d.id, [ nodeFrom[0].left + 50, nodeFrom[0].top + 50, nodeTo[0].left + 50, nodeTo[0].top + 50 ])
-        var arrow = this.makeArrow(d.id, nodeFrom[0].left + 50, nodeFrom[0].top + 50, nodeTo[0].left + 50, nodeTo[0].top + 50)
-        // console.log(arrow)
-        this.canvas.add(line, arrow.arrow1, arrow.arrow2)
-        this.canvas.sendToBack(line)
-        this.canvas.sendToBack(arrow.arrow1)
-        this.canvas.sendToBack(arrow.arrow2)
-        this.canvas.renderAll()
+        if (nodeFrom[0] && nodeTo[0]) {
+          var line = this.makeLine(d.id, [ nodeFrom[0].left + 50, nodeFrom[0].top + 50, nodeTo[0].left + 50, nodeTo[0].top + 50 ])
+          var arrow = this.makeArrow(d.id, nodeFrom[0].left + 50, nodeFrom[0].top + 50, nodeTo[0].left + 50, nodeTo[0].top + 50)
+          this.canvas.add(line, arrow.arrow1, arrow.arrow2)
+          this.canvas.sendToBack(line)
+          this.canvas.sendToBack(arrow.arrow1)
+          this.canvas.sendToBack(arrow.arrow2)
+          this.canvas.renderAll()
+        } else {
+          if (!lostLinesIds.includes(d.id)) {
+            lostLinesIds.push(d.id)
+          }
+        }
       }
       )
+      lostLinesIds.forEach(lostLineId => {
+        // const deletedDep = deps.find(dep => dep.id === lostLineId)
+        // deps.splice(deps.indexOf(deletedDep), 1)
+        this.$store.dispatch('deleteDep', lostLineId)
+          .then(() => {
+            console.log('Lost dependency ' + lostLineId + ' is deleted')
+          })
+      })
     },
     moveLine (nodeId, newLeft, newTop, deps) {
-      // console.log(nodeId, newLeft, newTop, deps)
       const depsFromIds = deps.filter(d => d.fromNodeId === nodeId).map(d => d.id)
       const depsToIds = deps.filter(d => d.toNodeId === nodeId).map(d => d.id)
       const lines = this.canvas.getObjects().filter(o => o.get('type') === 'line')
-      // console.log(depsFromIds, depsToIds, lines)
-      // console.log('from')
       lines.filter(l => depsFromIds.includes(l.get('id'))).forEach(l => {
         const newLineX1 = newLeft + 50
         const newLineY1 = newTop + 50
@@ -480,7 +526,6 @@ export default {
         this.canvas.sendToBack(lineArrow2)
       }
       )
-      // console.log('to')
       lines.filter(l => depsToIds.includes(l.get('id'))).forEach(l => {
         const newLineX1 = l.get('x1')
         const newLineY1 = l.get('y1')
@@ -513,7 +558,6 @@ export default {
         const nodeFrom = elems.filter(n => n.id === d.fromNodeId)
         const nodeTo = elems.filter(n => n.id === d.toNodeId)
         var line = this.makeLine([ nodeFrom[0].left + 50, nodeFrom[0].top + 50, nodeTo[0].left + 50, nodeTo[0].top + 50 ])
-        // console.log(line)
         this.canvas.add(line)
         this.canvas.sendToBack(line)
         this.canvas.renderAll()

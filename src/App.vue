@@ -85,17 +85,14 @@ export default {
       return store.getters.checkUser
     },
     userData () {
-      // console.log('this.user', store.getters.user)
       return store.getters.user
     },
     isLoading () {
-      // console.log('this.$store.getters.loading', this.$store.getters.loading)
       return this.$store.getters.loading
     }
   },
   watch: {
     $route (to, from) {
-      // console.log(from, to)
       if (!this.checkUser && to.name !== 'signin') {
         this.$router.push('/signin')
       }

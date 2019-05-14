@@ -26,7 +26,9 @@ export default ({
     },
     deleteDep (state, payload) {
       const deletedDep = state.deps.find(dep => dep.id === payload.id)
-      state.deps.splice(state.deps.indexOf(deletedDep), 1)
+      if (deletedDep) {
+        state.deps.splice(state.deps.indexOf(deletedDep), 1)
+      }
     }
   },
   actions: {
@@ -62,7 +64,6 @@ export default ({
             .ref(getters.user.id + '/dependencies')
             .once('value')
         const deps = depsResponse.val()
-        // console.log(deps)
         if (deps != null) {
           const depsArray = []
           Object.keys(deps).forEach(key => {
@@ -91,7 +92,7 @@ export default ({
       commit('setLoading', true)
       try {
         await firebase.database().ref(getters.user.id + '/dependencies').child(id).remove()
-        commit('deleteNode', {id})
+        commit('deleteDep', {id})
         commit('setLoading', false)
       } catch (error) {
         commit('setLoading', false)
