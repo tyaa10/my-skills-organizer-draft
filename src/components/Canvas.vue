@@ -209,9 +209,13 @@ export default {
         } else if (n.status === '6') {
           color = '#26de81'
         }
-        var rect = new fabric.Circle({id: n.id, fill: color, radius: n.radius, top: n.top, left: n.left})
-        this.canvas.add(rect)
-        this.canvas.sendToBack(rect)
+        var nodeCircle = new fabric.Circle({id: n.id, fill: color, radius: n.radius, top: n.top, left: n.left})
+        this.canvas.add(nodeCircle)
+        this.canvas.sendToBack(nodeCircle)
+        var nodeTitleText = new fabric.Text(n.title, {id: n.id + '_title', top: n.top - 20, left: n.left, fontSize: 20})
+        // console.log(nodeTitleText)
+        this.canvas.insertAt(nodeTitleText, this.canvas.getObjects().length)
+        nodeTitleText.hasControls = nodeTitleText.hasBorders = nodeTitleText.selectable = false
       }
       )
       this.drawLines(elems, deps)
@@ -224,6 +228,19 @@ export default {
     },
     nodeMoving (ev) {
       this.isObjectMoving = true
+      if (this.selectedNodeId !== null) {
+        const modifiedObject = ev.target
+        const newLeft = modifiedObject.get('left')
+        const newTop = modifiedObject.get('top')
+        const movingNodeText =
+          this.canvas.getObjects().filter(
+            o => (o.get('type') === 'text') && (o.get('id') === this.selectedNodeId + '_title')
+          )[0]
+        movingNodeText.set({
+          'left': newLeft,
+          'top': newTop - 20
+        })
+      }
     },
     nodeMouseUp (ev) {
       if (this.isObjectMoving) {
