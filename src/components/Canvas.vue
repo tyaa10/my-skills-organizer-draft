@@ -213,7 +213,7 @@ export default {
         this.canvas.add(nodeCircle)
         this.canvas.sendToBack(nodeCircle)
         var nodeTitleText = new fabric.Text(n.title, {id: n.id + '_title', top: n.top - 20, left: n.left, fontSize: 20})
-        // console.log(nodeTitleText)
+        // console.log('nodeTitleText', nodeTitleText)
         this.canvas.insertAt(nodeTitleText, this.canvas.getObjects().length)
         nodeTitleText.hasControls = nodeTitleText.hasBorders = nodeTitleText.selectable = false
       }
@@ -307,12 +307,33 @@ export default {
     mouseDown (ev) {
       if (this.dependenceCreationHint !== null) {
         if (ev.target && this.checkNode) {
+          const fromNodeId = this.dependentNodeId
+          const toNodeId = this.selectedNodeId
+          const selectedNodeStatus = this.selectedNode.status
           this.$store.dispatch('newDep', {
-            fromNodeId: this.dependentNodeId,
-            toNodeId: this.selectedNodeId
+            fromNodeId: fromNodeId,
+            toNodeId: toNodeId
           })
             .then(() => {
               this.submitStatus = 'OK'
+              if (selectedNodeStatus !== '6') {
+                const fromNode = this.elems.filter(n => n.id === fromNodeId)[0]
+                if (fromNode.dependenciesSatisfied) {
+                  this.$store.dispatch('editNode', {
+                    id: fromNodeId,
+                    changes: {
+                      dependenciesSatisfied: false
+                    }
+                  })
+                    .then(() => {
+                      this.submitStatus = 'OK'
+                      this.fabricDraw(this.elems, this.deps)
+                    })
+                    .catch(err => {
+                      this.submitStatus = err.message
+                    })
+                }
+              }
               // this.fabricDraw(this.elems)
             })
             .catch(err => {
@@ -337,7 +358,7 @@ export default {
         this.nodeDeleteDialogHandler.call()
       } else if (id === 'addDependencyContextMenuItem') {
         // TODO
-        var hintText = new fabric.Text('Select parent node', {top: this.canvas.getActiveObject().top - 20, left: this.canvas.getActiveObject().left, fontSize: 20})
+        var hintText = new fabric.Text('Select parent node', {top: this.canvas.getActiveObject().top + 100, left: this.canvas.getActiveObject().left, fontSize: 20})
         this.canvas.insertAt(hintText, this.canvas.getObjects().length)
         hintText.hasControls = hintText.hasBorders = hintText.selectable = false
         // hintText.bringToFront()
@@ -364,11 +385,15 @@ export default {
       showMessage('#cancelledMessage')
     },
     depDeleteDialogItOk () {
+      const fromNodeId = this.deps.filter(d => d.id === this.selectedDepId)[0].fromNodeId
+      const sourceNode = this.elems.filter(n => n.id === fromNodeId)[0]
       this.$store.dispatch('deleteDep', this.selectedDepId)
         .then(() => {
           this.depDeleteDialogHandler = null
+          this.recomputeNodeDeps(sourceNode)
           showMessage('#doneMessage')
         })
+      // this.fabricDraw(this.elems, this.deps)
     },
     depDeleteDialogItCancel () {
       this.depDeleteDialogHandler = null
@@ -387,7 +412,7 @@ export default {
           description: this.selectedNode.description,
           access: this.selectedNode.access,
           status: this.selectedNode.status,
-          dependenciesSatisfied: false,
+          dependenciesSatisfied: true,
           radius: 50,
           left: 0,
           top: 0
@@ -400,6 +425,21 @@ export default {
             this.submitStatus = err.message
           })
       } else if (this.formMode === 'edit') {
+        // -1 filter all deps with nodeTo == this.selectedNodeId
+        const depsTo = this.deps.filter(d => d.toNodeId === this.selectedNodeId)
+        // console.log('depsTo', depsTo)
+        // 0 for each dep filter source Node
+        depsTo.forEach(dTo => {
+          const sourceNodes = this.elems.filter(n => n.id === dTo.fromNodeId)
+          // console.log('sourceNodes', sourceNodes)
+          // 1 fore each source Node
+          sourceNodes.forEach(n => {
+            this.recomputeNodeDeps(n)
+          }
+          )
+        }
+        )
+        // do edit selected Node
         this.$store.dispatch('editNode', {
           id: this.selectedNodeId,
           changes: {
@@ -486,6 +526,7 @@ export default {
     drawLines (elems, deps) {
       this.canvas.remove(...this.canvas.getObjects().filter(o => o.get('type') === 'line'))
       var lostLinesIds = []
+      var lostLinesSourceNodes = []
       deps.forEach(d => {
         const nodeFrom = elems.filter(n => n.id === d.fromNodeId)
         const nodeTo = elems.filter(n => n.id === d.toNodeId)
@@ -501,6 +542,10 @@ export default {
           if (!lostLinesIds.includes(d.id)) {
             lostLinesIds.push(d.id)
           }
+          const sourceNode = this.elems.filter(n => n.id === d.fromNodeId)[0]
+          if (!lostLinesSourceNodes.includes(sourceNode)) {
+            lostLinesSourceNodes.push(sourceNode)
+          }
         }
       }
       )
@@ -511,6 +556,9 @@ export default {
           .then(() => {
             console.log('Lost dependency ' + lostLineId + ' is deleted')
           })
+      })
+      lostLinesSourceNodes.forEach(lostLineSourceNode => {
+        this.recomputeNodeDeps(lostLineSourceNode)
       })
     },
     moveLine (nodeId, newLeft, newTop, deps) {
@@ -580,6 +628,64 @@ export default {
         this.canvas.renderAll()
       }
       ) */
+    },
+    recomputeNodeDeps (node) {
+      var allDepsSutisfied = true
+      // 2 filter all deps with nodeFrom == currentNode.selectedNodeId
+      const nodeOutgoingDeps = this.deps.filter(dFrom => dFrom.fromNodeId === node.id)
+      // console.log('nodeOutgoingDeps', nodeOutgoingDeps)
+      // 3 fore each dep find a target Node by nodeTo
+      nodeOutgoingDeps.some(dOut => {
+        const currentDepNode = this.elems.filter(n => n.id === dOut.toNodeId)[0]
+        // 4 check if Node's property status == completed
+        console.log('currentDepNode', currentDepNode)
+        if (currentDepNode) {
+          if (currentDepNode.status !== '6') {
+            // console.log(currentDepNode)
+            allDepsSutisfied = false
+            return true
+          }
+        }
+      }
+      )
+      console.log('node.dependenciesSatisfied', node.dependenciesSatisfied)
+      console.log('allDepsSutisfied', allDepsSutisfied)
+      // if (!node.dependenciesSatisfied && allDepsSutisfied) {
+      if (!node.dependenciesSatisfied && allDepsSutisfied) {
+        // 5 if all the Nodes are completed then set edited Node's property dependenciesSatisfied to true
+        console.log('allDepsSutisfied', allDepsSutisfied)
+        console.log('node', node)
+        // console.log('node', node.id)
+        this.$store.dispatch('editNode', {
+          id: node.id,
+          changes: {
+            dependenciesSatisfied: true
+          }
+        })
+          .then(() => {
+            this.fabricDraw(this.elems, this.deps)
+            this.submitStatus = 'OK'
+          })
+          .catch(err => {
+            this.submitStatus = err.message
+          })
+      // } else if (node.dependenciesSatisfied && !allDepsSutisfied) {
+      } else if (node.dependenciesSatisfied && !allDepsSutisfied) {
+        // 5 if all the Nodes are completed then set edited Node's property dependenciesSatisfied to true
+        this.$store.dispatch('editNode', {
+          id: node.id,
+          changes: {
+            dependenciesSatisfied: false
+          }
+        })
+          .then(() => {
+            this.fabricDraw(this.elems, this.deps)
+            this.submitStatus = 'OK'
+          })
+          .catch(err => {
+            this.submitStatus = err.message
+          })
+      }
     }/* ,
     nodeModified (ev) {
       var modifiedObject = ev.target
