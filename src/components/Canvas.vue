@@ -58,10 +58,10 @@
               select.form__input#statusSelect(v-model='selectedNode.status')
                 option(value='1') new
                 option(value='2') scheduled
-                option(value='3') started
-                option(value='4') suspended
+                option(value='3' v-if="isNodeDepsSatisfied") started
+                option(value='4' v-if="isNodeDepsSatisfied") suspended
                 option(value='5') cancelled
-                option(value='6') done
+                option(value='6' v-if="isNodeDepsSatisfied") done
             .row
               .col-xs-6(style='margin-bottom: 16px;')
                 ul
@@ -108,7 +108,8 @@ export default {
       },
       formMode: '',
       dependenceCreationHint: null,
-      dependentNodeId: null
+      dependentNodeId: null,
+      selectedNodeDepsSatisfied: false
     }
   },
   validations: {
@@ -154,6 +155,9 @@ export default {
     },
     checkDep () {
       return this.selectedDepId !== null
+    },
+    isNodeDepsSatisfied () {
+      return this.selectedNodeDepsSatisfied
     }
   },
   watch: {
@@ -358,7 +362,15 @@ export default {
         this.nodeDeleteDialogHandler.call()
       } else if (id === 'addDependencyContextMenuItem') {
         // TODO
-        var hintText = new fabric.Text('Select parent node', {top: this.canvas.getActiveObject().top + 100, left: this.canvas.getActiveObject().left, fontSize: 20})
+        var hintText =
+          new fabric.Text(
+            'Select parent node'
+            , {
+              top: this.canvas.getActiveObject().top + 100,
+              left: this.canvas.getActiveObject().left,
+              fontSize: 20,
+              fill: '#06f'
+            })
         this.canvas.insertAt(hintText, this.canvas.getObjects().length)
         hintText.hasControls = hintText.hasBorders = hintText.selectable = false
         // hintText.bringToFront()
@@ -402,6 +414,7 @@ export default {
     setForm () {
       if (this.checkNode) {
         this.selectedNode = this.elems.find(elem => elem.id === this.selectedNodeId)
+        this.selectedNodeDepsSatisfied = this.selectedNode.dependenciesSatisfied
       }
     },
     applyNodeDataClick () {
@@ -638,7 +651,7 @@ export default {
       nodeOutgoingDeps.some(dOut => {
         const currentDepNode = this.elems.filter(n => n.id === dOut.toNodeId)[0]
         // 4 check if Node's property status == completed
-        console.log('currentDepNode', currentDepNode)
+        // console.log('currentDepNode', currentDepNode)
         if (currentDepNode) {
           if (currentDepNode.status !== '6') {
             // console.log(currentDepNode)
@@ -648,13 +661,13 @@ export default {
         }
       }
       )
-      console.log('node.dependenciesSatisfied', node.dependenciesSatisfied)
-      console.log('allDepsSutisfied', allDepsSutisfied)
+      // console.log('node.dependenciesSatisfied', node.dependenciesSatisfied)
+      // console.log('allDepsSutisfied', allDepsSutisfied)
       // if (!node.dependenciesSatisfied && allDepsSutisfied) {
       if (!node.dependenciesSatisfied && allDepsSutisfied) {
         // 5 if all the Nodes are completed then set edited Node's property dependenciesSatisfied to true
-        console.log('allDepsSutisfied', allDepsSutisfied)
-        console.log('node', node)
+        // console.log('allDepsSutisfied', allDepsSutisfied)
+        // console.log('node', node)
         // console.log('node', node.id)
         this.$store.dispatch('editNode', {
           id: node.id,
