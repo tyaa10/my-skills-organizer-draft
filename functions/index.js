@@ -39,7 +39,7 @@ exports.addNode = functions.https.onRequest(async (req, res) => {
   const payload = {
     "notification": {
       "title": "New Node Added to Your SkillsOrganizer",
-      "body": "(Title: ' + node.title + '). Review and Setting It"
+      "body": "(Title: " + node.title + "). Review and Setting It"
     }
   }
 
@@ -81,7 +81,19 @@ exports.addNode = functions.https.onRequest(async (req, res) => {
     }
     // Send response to the client
     // res.status(200).send(snapshot.ref.toString())
-    const response = await admin.messaging().sendToDevice(tokens, payload).then(function(response) {
+    return admin.messaging().sendToDevice(tokens, payload).then(function(response) {
+      // See the MessagingDevicesResponse reference documentation for
+      // the contents of response.
+      res.status(200).send(response)
+      cleanInvalidTokens(tokensWithKey, (response) ? response.results : null)
+      return console.log("Successfully sent message:", response)
+    })
+    .catch(function(error) {
+      cleanInvalidTokens(tokensWithKey, (response) ? response.results : null)
+      console.log("Error sending message:", error)
+      res.status(500).send(response)
+    })
+    /* const response = await admin.messaging().sendToDevice(tokens, payload).then(function(response) {
       // See the MessagingDevicesResponse reference documentation for
       // the contents of response.
       res.status(200).send(response)
@@ -92,6 +104,6 @@ exports.addNode = functions.https.onRequest(async (req, res) => {
     })
     // res.status(200).send(response)
     return await cleanInvalidTokens(tokensWithKey, (response) ? response.results : null)
-      // .then(() => admin.database().ref('/notifications').child(NOTIFICATION_SNAPSHOT.key).remove())
+      // .then(() => admin.database().ref('/notifications').child(NOTIFICATION_SNAPSHOT.key).remove()) */
   })
 })

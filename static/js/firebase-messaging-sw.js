@@ -1,8 +1,8 @@
 // Give the service worker access to Firebase Messaging.
 // Note that you can only use Firebase Messaging here, other Firebase libraries
 // are not available in the service worker.
-importScripts('https://www.gstatic.com/firebasejs/4.8.1/firebase-app.js')
-importScripts('https://www.gstatic.com/firebasejs/4.8.1/firebase-messaging.js')
+importScripts('https://www.gstatic.com/firebasejs/6.1.0/firebase-app.js')
+importScripts('https://www.gstatic.com/firebasejs/6.1.0/firebase-messaging.js')
 // Initialize the Firebase app in the service worker by passing in the
 // messagingSenderId.
 const config = {
@@ -11,7 +11,8 @@ const config = {
   databaseURL: 'https://my-skills-organizer.firebaseio.com',
   projectId: 'my-skills-organizer',
   storageBucket: 'my-skills-organizer.appspot.com',
-  messagingSenderId: '1013115094554'
+  messagingSenderId: '1013115094554',
+  appId: '1:1013115094554:web:7d6a6c20058a194a'
 }
 
 firebase.initializeApp(config)
@@ -28,15 +29,17 @@ const FIREBASE_MESSAGING = firebase.messaging()
 /* FIREBASE_MESSAGING.onMessage(function(payload) {
   console.log('Message received. ', payload)
 }) */
-messaging.setBackgroundMessageHandler(function(payload) {
+FIREBASE_MESSAGING.setBackgroundMessageHandler(function(payload) {
   console.log('[firebase-messaging-sw.js] Received background message ', payload)
   // Customize notification here
   var notificationTitle = 'Background Message Title'
   var notificationOptions = {
     body: 'Background Message body.',
     icon: '/firebase-logo.png'
-  };
+  }
 
-  return self.registration.showNotification(notificationTitle,
-    notificationOptions);
+  return self.registration.showNotification(
+    notificationTitle,
+    notificationOptions
+  )
 })

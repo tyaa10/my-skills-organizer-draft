@@ -55,9 +55,9 @@ new Vue({
           }).catch(err => {
             console.log(err)
           })
-          FIREBASE_MESSAGING.onMessage(function(payload) {
-            console.log('Message received. ', payload)
-          })
+        FIREBASE_MESSAGING.onMessage(function (payload) {
+          console.log('Message received. ', payload)
+        })
       } else {
         this.$router.push('/signin')
       }
