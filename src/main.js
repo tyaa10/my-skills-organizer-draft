@@ -57,13 +57,13 @@ new Vue({
             console.log('Notification permission granted.')
             return FIREBASE_MESSAGING.getToken()
           }).then(token => {
-            console.log(token)
+            console.log('a new token', token)
             return FIREBASE_MESSAGING.getToken().then((token) => {
-              var tokenExists = false
-              FIREBASE_DATABASE.ref(MAIN_THIS.$store.getters.user.id + '/tokens').once('value', function (userTokensRoot) {
-                console.log('userTokensRoot', userTokensRoot)
-                if (userTokensRoot.exists()) {
-                  const userTokens = userTokensRoot.val()
+              /* var tokenExists = false
+              FIREBASE_DATABASE.ref(MAIN_THIS.$store.getters.user.id + '/tokens').once('value', function (snapshot) {
+                console.log('snapshot', snapshot)
+                if (snapshot.exists()) {
+                  const userTokens = snapshot.val()
                   console.log('userTokens', userTokens)
                   if (userTokens) {
                     Object.keys(userTokens).some(key => {
@@ -86,7 +86,26 @@ new Vue({
                 }).key
                 MAIN_THIS.$store.dispatch('setTokenKey', MAIN_THIS.$firebaseMessagingTokenKey)
               }
-              console.log('this.$firebaseMessagingTokenKey = ', MAIN_THIS.$firebaseMessagingTokenKey)
+              console.log('this.$firebaseMessagingTokenKey = ', MAIN_THIS.$firebaseMessagingTokenKey) */
+              FIREBASE_DATABASE.ref(MAIN_THIS.$store.getters.user.id + '/tokens')
+                .orderByChild('token')
+                .equalTo(token)
+                .once('value', function (snapshot) {
+                  console.log('snapshot', snapshot)
+                  console.log('snapshot.exists()', snapshot.exists())
+                  if (!snapshot.exists()) {
+                    MAIN_THIS.$firebaseMessagingTokenKey = FIREBASE_DATABASE.ref(MAIN_THIS.$store.getters.user.id + '/tokens').push({
+                      token: token
+                    }).key
+                  } else {
+                    const tokens = snapshot.val()
+                    if (tokens != null) {
+                      MAIN_THIS.$firebaseMessagingTokenKey = Object.keys(tokens)[0]
+                    }
+                  }
+                  console.log('setTokenKey', MAIN_THIS.$firebaseMessagingTokenKey)
+                  MAIN_THIS.$store.dispatch('setTokenKey', MAIN_THIS.$firebaseMessagingTokenKey)
+                })
             })
           }).catch(err => {
             console.log(err)
