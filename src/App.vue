@@ -59,6 +59,7 @@ export default {
       user: {} */
     }
   },
+  props: ['firebaseMessagingTokenKey', 'lastUser'],
   created () {
     // this.user = firebase.auth().currentUser
     firebase.auth().onAuthStateChanged(function (user) {
@@ -101,6 +102,14 @@ export default {
   methods: {
     signOut () {
       // firebase.auth().signOut()
+      const FIREBASE_DATABASE = firebase.database()
+      console.log('lastUser3', store.getters.user)
+      console.log('firebaseMessagingTokenKey3 = ', store.getters.firebaseMessagingTokenKey)
+      if (store.getters.firebaseMessagingTokenKey) {
+        // delete firebaseMessagingTokenKey
+        FIREBASE_DATABASE.ref(store.getters.user.id + '/tokens').child(store.getters.firebaseMessagingTokenKey).remove()
+      }
+      store.dispatch('setTokenKey', null)
       store.dispatch('logoutUser')
     }
   }

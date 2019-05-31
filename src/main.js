@@ -20,6 +20,12 @@ Vue.use(Vuelidate)
 
 Vue.config.productionTip = false
 
+// var firebaseMessagingTokenKey = null
+// var lastUser = null
+
+Vue.prototype.$firebaseMessagingTokenKey = null
+Vue.prototype.$lastUser = null
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
@@ -27,14 +33,19 @@ new Vue({
   store,
   components: { App },
   template: '<App/>',
+  propData: {
+    firebaseMessagingTokenKey: this.$firebaseMessagingTokenKey,
+    lastUser: this.$lastUser
+  },
   created () {
     firebase.initializeApp(config)
+    const FIREBASE_MESSAGING = firebase.messaging()
+    const FIREBASE_DATABASE = firebase.database()
+    const MAIN_THIS = this
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
-        this.$router.push('/')
-
-        const FIREBASE_MESSAGING = firebase.messaging()
-        const FIREBASE_DATABASE = firebase.database()
+        MAIN_THIS.$lastUser = user
+        MAIN_THIS.$router.push('/')
         // const FIREBASE_NOTIFICATIONS = firebase.notifications()
         FIREBASE_MESSAGING.usePublicVapidKey('BCcFXVYoeQk-AE5PWLAoZIjsKsSvZ6Jo-F0qL8HfvgcFLz7PVeHxXTbmCdD9x7kWecCBHKGq1Z9s05CqZpqW1Z0')
         navigator.serviceWorker.register('./static/js/firebase-messaging-sw.js')
@@ -48,9 +59,34 @@ new Vue({
           }).then(token => {
             console.log(token)
             return FIREBASE_MESSAGING.getToken().then((token) => {
-              FIREBASE_DATABASE.ref(this.$store.getters.user.id + '/tokens').push({
-                token: token
+              var tokenExists = false
+              FIREBASE_DATABASE.ref(MAIN_THIS.$store.getters.user.id + '/tokens').once('value', function (userTokensRoot) {
+                console.log('userTokensRoot', userTokensRoot)
+                if (userTokensRoot.exists()) {
+                  const userTokens = userTokensRoot.val()
+                  console.log('userTokens', userTokens)
+                  if (userTokens) {
+                    Object.keys(userTokens).some(key => {
+                      const t = userTokens[key]
+                      console.log(t.token, token)
+                      if (t.token === token) {
+                        tokenExists = true
+                        MAIN_THIS.$firebaseMessagingTokenKey = key
+                        MAIN_THIS.$store.dispatch('setTokenKey', MAIN_THIS.$firebaseMessagingTokenKey)
+                        return true
+                      }
+                    })
+                  }
+                }
               })
+              console.log('tokenExists = ' + tokenExists)
+              if (!tokenExists) {
+                MAIN_THIS.$firebaseMessagingTokenKey = FIREBASE_DATABASE.ref(MAIN_THIS.$store.getters.user.id + '/tokens').push({
+                  token: token
+                }).key
+                MAIN_THIS.$store.dispatch('setTokenKey', MAIN_THIS.$firebaseMessagingTokenKey)
+              }
+              console.log('this.$firebaseMessagingTokenKey = ', MAIN_THIS.$firebaseMessagingTokenKey)
             })
           }).catch(err => {
             console.log(err)
@@ -59,7 +95,11 @@ new Vue({
           console.log('Message received. ', payload)
         })
       } else {
-        this.$router.push('/signin')
+        console.log('this.$lastUser2', MAIN_THIS.$lastUser)
+        console.log('this.$firebaseMessagingTokenKey2 = ', MAIN_THIS.$firebaseMessagingTokenKey)
+        MAIN_THIS.$lastUser = null
+        MAIN_THIS.$firebaseMessagingTokenKey = null
+        MAIN_THIS.$router.push('/signin')
       }
     })
   }

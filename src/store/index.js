@@ -6,6 +6,7 @@ import Vuex from 'vuex'
 import elems from './elems'
 import user from './user'
 import deps from './dependencies'
+import messaging from './messaging'
 import common from './common'
 // import User from './UserModel'
 // import Node from './NodeModel'
@@ -14,7 +15,7 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   modules: {
-    elems, user, common, deps
+    elems, user, common, deps, messaging
   }/* ,
   plugins: [createPersistedState()] */
 })
