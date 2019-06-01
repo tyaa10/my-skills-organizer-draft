@@ -51,34 +51,17 @@ export default {
         {title: 'Home', url: '/'},
         {title: 'Templates', url: '/templates'},
         {title: 'AboutUs', url: '/about'}
-      ]/* ,
-      photo: '',
-      userId: '',
-      name: '',
-      email: '',
-      user: {} */
+      ]
     }
   },
   props: ['firebaseMessagingTokenKey', 'lastUser'],
   created () {
-    // this.user = firebase.auth().currentUser
     firebase.auth().onAuthStateChanged(function (user) {
       if (user) {
         store.dispatch('loggedUser', user)
         store.dispatch('loadNodes', user)
         store.dispatch('loadDeps', user)
-        /* this.user = user
-        this.name = user.displayName
-        this.email = user.email
-        this.photo = user.photoURL
-        this.userId = user.uid */
-      } else {
-        /* this.user = {}
-        this.name = ''
-        this.email = ''
-        this.photo = ''
-        this.userId = '' */
-      }
+      } else {}
     })
   },
   computed: {
@@ -103,8 +86,8 @@ export default {
     signOut () {
       // firebase.auth().signOut()
       const FIREBASE_DATABASE = firebase.database()
-      console.log('lastUser3', store.getters.user)
-      console.log('firebaseMessagingTokenKey3 = ', store.getters.firebaseMessagingTokenKey)
+      // console.log('lastUser3', store.getters.user)
+      // console.log('firebaseMessagingTokenKey3 = ', store.getters.firebaseMessagingTokenKey)
       if (store.getters.firebaseMessagingTokenKey) {
         // delete firebaseMessagingTokenKey
         FIREBASE_DATABASE.ref(store.getters.user.id + '/tokens').child(store.getters.firebaseMessagingTokenKey).remove()

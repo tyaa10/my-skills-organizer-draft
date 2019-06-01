@@ -39,7 +39,8 @@ exports.addNode = functions.https.onRequest(async (req, res) => {
   const payload = {
     "notification": {
       "title": "New Node Added to Your SkillsOrganizer",
-      "body": "(Title: " + node.title + "). Review and Setting It"
+      "body": "(Title: " + node.title + "). Review and Setting It",
+      "click_action": "https://my-skills-organizer.firebaseapp.com"
     }
   }
 

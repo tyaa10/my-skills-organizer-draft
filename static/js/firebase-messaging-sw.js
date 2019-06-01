@@ -32,11 +32,19 @@ const FIREBASE_MESSAGING = firebase.messaging()
 FIREBASE_MESSAGING.setBackgroundMessageHandler(function(payload) {
   console.log('[firebase-messaging-sw.js] Received background message ', payload)
   // Customize notification here
-  var notificationTitle = 'Background Message Title'
-  var notificationOptions = {
-    body: 'Background Message body.',
-    icon: '/firebase-logo.png'
+  const notificationTitle = payload.notification.title
+  const notificationOptions = {
+    body: payload.notification.body,
+    icon: '/firebase-logo.png'/* ,
+    actions: [{action: "refresh", title: "Refresh the page?"}] */
   }
+
+  /* self.addEventListener('notificationclick', function(event) {
+    event.notification.close()
+    if (event.action === 'refresh') {
+      
+    }
+  }, false) */
 
   return self.registration.showNotification(
     notificationTitle,
