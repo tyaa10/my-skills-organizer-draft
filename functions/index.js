@@ -14,6 +14,8 @@ exports.addNode = functions.https.onRequest(async (req, res) => {
   const uId = req.query.uId
   // Grab the json body
   const nodeBody = req.body
+  // Копируем из тела сообщения от внешнего источника
+  // данные в объект нового узла цели 
   const node = {
     title: nodeBody.title,
     type: nodeBody.type,
@@ -35,7 +37,8 @@ exports.addNode = functions.https.onRequest(async (req, res) => {
       msgbody: '(Title: ' + node.title + '). Review and Setting It'
     }
   } */
-
+  // Полезная нагрузка для отправки веб-клиентам в виде уведомления
+  // (структура объекта - стандартная)
   const payload = {
     "notification": {
       "title": "New Node Added to Your SkillsOrganizer",
@@ -69,12 +72,19 @@ exports.addNode = functions.https.onRequest(async (req, res) => {
   }
   // Send notifications
   return admin.database().ref(uId + '/tokens').once('value').then(async (data) => {
+    // Читаем из хранилища коренвой элемент с токенами,
+    // затем выполняем асинхронную функцию.
+    // Если токенов нет - завершаем работу функции
     if (!data.val()) return
+    // Иначе - извлекаем значение элемента с токенами
     const snapshot = data.val()
     const tokensWithKey = []
     const tokens = []
+    // Значение каждого токена
     for (let key in snapshot) {
+      // Собираем в массив
       tokens.push(snapshot[key].token)
+      // Затем - в массив елементов с токенами и их ключами
       tokensWithKey.push({
         token: snapshot[key].token,
         key: key

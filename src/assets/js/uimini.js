@@ -11,55 +11,36 @@
   uiSidebar.classList.remove('full')
   uiSidebar.style = 'left: -240px'
 } */
-
+// Функция переключения видимости боковой панели
 function toggleSidebar () {
   document.querySelector('.sidebar').classList.toggle('active')
   document.querySelector('.sidebar').classList.toggle('full')
   if (document.querySelector('.sidebar').classList.contains('active')) {
     document.querySelector('.sidebar').style = 'left: 0'
-    // document.addEventListener('click', uiSidebarVisiblityListener, false)
   } else {
     document.querySelector('.sidebar').style = 'left: -320px'
-    // document.removeEventListener('click', uiSidebarVisiblityListener, false)
   }
 }
-
+// Функция отображения боковой панели
 function showSidebar () {
   document.querySelector('.sidebar').classList.add('active')
   document.querySelector('.sidebar').classList.add('full')
   document.querySelector('.sidebar').style = 'left: 0'
 }
-
+// Функция скрытия боковой панели
 function hideSidebar () {
   document.querySelector('.sidebar').classList.remove('active')
   document.querySelector('.sidebar').classList.remove('full')
   document.querySelector('.sidebar').style = 'left: -320px'
 }
 
-/* if (uiSidebarBtn) {
-  uiSidebarBtn.addEventListener('click', toggleSidebar)
-} */
-
-/* //
-// Sidebar 2
-//
-
-var sidebar2CloseButton = document.querySelector('#sidebar2-closer')
-
-function toggleSidebar2 () {
-  document.querySelector('#sidebar2').classList.toggle('collapsed')
-}
-
-if (sidebar2CloseButton) {
-  sidebar2CloseButton.addEventListener('click', toggleSidebar2)
-} */
-
 //
 // Navbar
 //
 var uiNavbarListMobile = document.querySelector('.navbar-list__wrapper')
 var uiNavbarMenuMobileBtn = document.querySelector('.navbar-content .button-burger')
-
+// Если присутствует кнопка мобильного меню -
+// активировать кнопку и список пунктов
 if (uiNavbarMenuMobileBtn) {
   uiNavbarMenuMobileBtn.addEventListener('click', function () {
     this.classList.toggle('active')
@@ -72,7 +53,7 @@ if (uiNavbarMenuMobileBtn) {
 //
 var uiAlert = document.querySelectorAll('.ui-alert')
 var uiAlertBtnClose = document.querySelectorAll('.ui-alert .button-close')
-
+// Установка на каждое окно Alert обработчика для закрытия
 if (uiAlert) {
   for (let i = 0; i < uiAlertBtnClose.length; i++) {
     uiAlertBtnClose[i].onclick = function () {
@@ -86,7 +67,7 @@ if (uiAlert) {
 //
 var uiTag = document.querySelectorAll('.ui-tag')
 var uiTagBtnClose = document.querySelectorAll('.ui-tag .button-close')
-
+// Установка на каждый Tag (сейчас в приложении не используются) обработчика для закрытия
 if (uiTag) {
   for (let i = 0; i < uiTagBtnClose.length; i++) {
     uiTagBtnClose[i].onclick = function () {
@@ -183,9 +164,9 @@ function uiMessage (okButtonHandler, cancelButtonHandler) { // eslint-disable-li
 
   // Event for Close Cancel
   // TODO: bug
-  // Если кенцел отсутвует на 1 модалке и есть на второq в i отправляется 0.
+  // Если отмена отсутвует на 1 модалке и есть на второй - в i отправляется 0.
   // закрывается 1. вторая без изменений
-  // решение - новая функция+класс для окна с кенцел
+  // решение - новая функция+класс для окна с отменой
   Array.prototype.forEach.call(uiMessageDialogBtnCancel, function (element, i) {
     var newElement = element.cloneNode(true)
     element.parentNode.replaceChild(newElement, element)
@@ -227,5 +208,5 @@ function uiMessage (okButtonHandler, cancelButtonHandler) { // eslint-disable-li
     showMessageDialog(0)
   }
 }
-
+// Экспорт всех необходимых функций из модуля
 export { showMessage, uiMessage, toggleSidebar, showSidebar, hideSidebar }
