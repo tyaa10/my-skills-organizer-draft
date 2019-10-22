@@ -7,6 +7,8 @@
             router-link.header-logo(
               to="/"
             ) Skills Organizr
+            // Главное меню в мобильном исполнении
+            // с инлайн-обработчиком клика
             .button-burger(
               @click="menuShow = !menuShow"
               :class="{ active: menuShow }"
@@ -18,6 +20,7 @@
               :class="{ active: menuShow }"
             )
               ul.navbar-list
+                // Динамическое формирование пунктов меню из массива linkMenu
                 li.navbar-item(
                   v-for="link in linkMenu"
                   :key="link.title"
@@ -26,14 +29,16 @@
                   router-link.navbar-link(
                     :to="`${link.url}`"
                   ) {{ link.title }}
+                // Статическое формирование пункта меню "Выйти"
                 li.navbar-item(
                   v-if="checkUser"
                   @click='signOut'
                 )
                   span.navbar-link SignOut ({{userData.name}})
                     img(:src="userData.photo" style="height: 32px; width: 32px; border-radius: 50%")
-
+    // Место для отображения компонента, соответствующего текущему роуту
     router-view
+    // Анимированная заставка для отображения во время выполнения операций с данными
     .cssload-loader(v-show="isLoading")
       .cssload-inner.cssload-one
       .cssload-inner.cssload-two
@@ -56,6 +61,7 @@ export default {
   },
   props: ['firebaseMessagingTokenKey', 'lastUser'],
   created () {
+    // Обработчик событий "пользователь вошел / вышел"
     firebase.auth().onAuthStateChanged(function (user) {
       if (user) {
         store.dispatch('loggedUser', user)
@@ -75,24 +81,30 @@ export default {
       return this.$store.getters.loading
     }
   },
+  // Наблюдение за значением route
   watch: {
     $route (to, from) {
+      // Если нет текущего пользователя
+      // и текущий роут не "Вход"
       if (!this.checkUser && to.name !== 'signin') {
+        // Переадресуем пользователя на раздел "Вход"
         this.$router.push('/signin')
       }
+      // Иначе переадресуем на желаемый раздел сайта
     }
   },
   methods: {
     signOut () {
-      // firebase.auth().signOut()
+      // Получение хендлера firebase
       const FIREBASE_DATABASE = firebase.database()
-      // console.log('lastUser3', store.getters.user)
-      // console.log('firebaseMessagingTokenKey3 = ', store.getters.firebaseMessagingTokenKey)
+      // Если в локальном хранилище есть токен получения уведомлений
       if (store.getters.firebaseMessagingTokenKey) {
-        // delete firebaseMessagingTokenKey
+        // - удаляем его из firebase
         FIREBASE_DATABASE.ref(store.getters.user.id + '/tokens').child(store.getters.firebaseMessagingTokenKey).remove()
       }
+      // Устанавливаем поле токена получения уведомлений в локальном хранилище в null
       store.dispatch('setTokenKey', null)
+      // Вызываем выход из учетной записи в текущем приложении
       store.dispatch('logoutUser')
     }
   }

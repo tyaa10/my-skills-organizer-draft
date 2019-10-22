@@ -32,6 +32,8 @@
         span.ui-square.color-done
         = ' '
         span Done
+  // Секция, содержащая экземпляр компонента Canvas
+  // для отображения основного дерева целей и задач
   section#c(ref='canvasContainer')
     Canvas
 </template>

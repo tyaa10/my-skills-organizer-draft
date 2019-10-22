@@ -1,11 +1,19 @@
 <template lang='pug'>
+  // На действие "Открыть контекстное меню" для всей области рисования
+  // устанавливаем собственный обработчик события - contextMenuOpen
   .container(v-on:contextmenu.prevent='contextMenuOpen')
+    // В верхней части разметки располагаем представления для всплывающих
+    // сообщений из библиотеки uimini
     #cancelledMessage.ui-message.ui-message--danger
       span.message-title Cancelled
     #doneMessage.ui-message.ui-message--success
       span.message-title Done
+    // html-элемент canvas, на котором библиотека Fabric.js
+    // будет осуществлять рисование
     canvas.app-canvas#canvas(ref='canvas') Your browser is too old!
     // Context Menu
+    // При вызове контекстного меню отображать его только при условии,
+    // что сейчас выбран один узел или одна связь
     vue-context(ref='menu' v-if="checkNode || checkDep")
       ul
         li#editNodeContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkNode") Edit Node
@@ -23,6 +31,7 @@
         .ui-messageBox__footer
           .button.button-light.ui-messageBox-cancel Cancel
           .button.button-primary.ui-messageBox-ok OK
+    // Главная кнопка экрана: начать добавление нового узла
     .fab(@click='addNodeClick') +
     .sidebar-open-button
       .button-burger
@@ -32,6 +41,7 @@
     .sidebar
       .container
         .sidebar-content
+          // Подавление стандартной отправки пост-запроса формой
           form(v-on:submit.prevent='')
             .form-item(:class="{ 'form-group--error': $v.selectedNode.title.$error }")
               label.form__label(for='titleInput') Title

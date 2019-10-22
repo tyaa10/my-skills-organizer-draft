@@ -104,17 +104,5 @@ exports.addNode = functions.https.onRequest(async (req, res) => {
       console.log("Error sending message:", error)
       res.status(500).send(response)
     })
-    /* const response = await admin.messaging().sendToDevice(tokens, payload).then(function(response) {
-      // See the MessagingDevicesResponse reference documentation for
-      // the contents of response.
-      res.status(200).send(response)
-      return console.log("Successfully sent message:", response)
-    })
-    .catch(function(error) {
-      console.log("Error sending message:", error)
-    })
-    // res.status(200).send(response)
-    return await cleanInvalidTokens(tokensWithKey, (response) ? response.results : null)
-      // .then(() => admin.database().ref('/notifications').child(NOTIFICATION_SNAPSHOT.key).remove()) */
   })
 })
