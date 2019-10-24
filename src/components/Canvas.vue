@@ -38,19 +38,26 @@
         span.line.line-1
         span.line.line-2
         span.line.line-3
+    // Боковая панель создания / редактирования узла.
+    // По умолчанию скрыта
     .sidebar
       .container
         .sidebar-content
+          // Форма создания / редактирования узла.
           // Подавление стандартной отправки пост-запроса формой
           form(v-on:submit.prevent='')
+            // Привязка блока с полем ввода к свойству модели
+            // с указанием текстов ошибок валидации
             .form-item(:class="{ 'form-group--error': $v.selectedNode.title.$error }")
               label.form__label(for='titleInput') Title
+              // Поле ввода заголовка узла
               input.form__input#titleInput(type='text' placeholder='Title' v-model.trim="$v.selectedNode.title.$model")
             .error(v-if="!$v.selectedNode.title.required") Field is required
             .error(v-if="!$v.selectedNode.title.minLength") Title must have at least {{$v.selectedNode.title.$params.minLength.min}} letters
             .error(v-if="!$v.selectedNode.title.maxLength") Title must have at most {{$v.selectedNode.title.$params.maxLength.max}} letters
             .form-item(:class="{ 'form-group--error': $v.selectedNode.type.$error }")
               label.form__label(for='typeSelect') Type
+              // Выпадающий список выбора типа узла
               select.form__input#typeSelect(v-model.trim="$v.selectedNode.type.$model")
                 option(disabled='' value='') select type
                 option(value='1') basis
@@ -59,10 +66,12 @@
             .error(v-if="!$v.selectedNode.type.required") Field is required
             .form-item(:class="{ 'form-group--error': $v.selectedNode.description.$error }")
               label.form__label(for='descriptionTextarea') Description
+              // Область ввода текста краткого описания узла
               textarea.form__input#descriptionTextarea(placeholder='Description …' v-model.trim="$v.selectedNode.description.$model")
             .error(v-if="!$v.selectedNode.description.required") Field is required
             .error(v-if="!$v.selectedNode.description.minLength") Description must have at least {{$v.selectedNode.description.$params.minLength.min}} letters
             .error(v-if="!$v.selectedNode.description.maxLength") Description must have at most {{$v.selectedNode.description.$params.maxLength.max}} letters
+            // Выпадающий список выбора состояния узла
             .form-item
               label.form__label(for='statusSelect') Status
               select.form__input#statusSelect(v-model='selectedNode.status')
@@ -77,12 +86,16 @@
                 ul
                   li
                     .ui-checkbox-wrapper
+                      // Флаг открытия доступа к данным узла для систем сбора информации
+                      // о потенциальных клиентах
                       input#accessCheckbox.ui-checkbox(type='checkbox' v-model='selectedNode.access')
                       label.label--inline(for='accessCheckbox') Public
             .row.grid-middle
               .col-xs-6
+                // Кнопка отмены добавления / изменения узла
                 button.button--round.button--big.button.button-default(type='reset' @click='resetForm') Discard
               .col-xs-6
+                // Кнопка подтвреждения добавления / изменения узла
                 button.button--round.button--big.button.button-success(type='submit' :disabled='$v.selectedNode.$invalid' @click.prevent='applyNodeDataClick') Apply
 </template>
 
@@ -101,6 +114,7 @@ export default {
   },
 
   data () {
+    // Модель для представления
     return {
       canvas: null,
       submitStatus: '',
@@ -122,6 +136,7 @@ export default {
       selectedNodeDepsSatisfied: false
     }
   },
+  // Правила валидации
   validations: {
     selectedNode: {
       title: {

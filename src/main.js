@@ -86,9 +86,9 @@ new Vue({
                 // и запрашиваем у firebase ключ, созданный ею для записи токена
                 if (!snapshot.exists()) {
                   MAIN_THIS.$firebaseMessagingTokenKey = FIREBASE_DATABASE.ref(MAIN_THIS.$store.getters.user.id + '/tokens')
-                  .push({
-                    token: token
-                  }).key
+                    .push({
+                      token: token
+                    }).key
                 } else {
                   // Иначе - читаем элемент массива с найденным токеном
                   // и сохраняем его ключ
