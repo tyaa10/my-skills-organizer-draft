@@ -107,7 +107,7 @@ import { required, minLength, maxLength } from 'vuelidate/lib/validators'
 // import { mapMutations } from 'vuex'
 
 export default {
-  name: 'AppCanvas',
+  name: 'Canvas',
 
   components: {
     VueContext
@@ -133,7 +133,7 @@ export default {
       formMode: '',
       dependenceCreationHint: null,
       dependentNodeId: null,
-      selectedNodeDepsSatisfied: false
+      selectedNodeDepsSatisfied: false // Удовлетворены ли все зависиомсти выделенного узла
     }
   },
   // Правила валидации
@@ -156,46 +156,53 @@ export default {
   },
   computed: {
     elems () {
+      // TODO источник данных об узлах
       return this.$store.getters.elems
     },
     deps () {
+      // TODO источник данных о связях
       return this.$store.getters.deps
     },
     width () {
-      // return (70 * this.$parent.$el.clientWidth) / 100
+      // Вычисление ширины области рисования
       return this.$parent.$el.clientWidth
     },
     height () {
-      // return (70 * this.$parent.$el.clientHeight) / 100
+      // Вычисление высоты области рисования
       return this.$parent.$el.clientHeight
     },
     widthCenter () {
+      // Вычисление центра области рисования по ширине
       return this.width / 2
     },
     heightCenter () {
+      // Вычисление центра области рисования по высоте
       return this.height / 2
     },
     checkNode () {
+      // Проверка: есть ли выделенный узел
       return this.selectedNodeId !== null
     },
     checkDep () {
+      // Проверка: есть ли выделенная связь
       return this.selectedDepId !== null
     },
     isNodeDepsSatisfied () {
+      // Проверка: удовлетворены ли все зависимости выделенного узла
       return this.selectedNodeDepsSatisfied
     }
   },
   watch: {
+    // Если изменился список узлов или связей - обновляем область рисования
     elems (newVal, oldVal) {
       this.fabricDraw(this.elems, this.deps)
-      // this.fabricDraw(newVal.filter(n => !oldVal.includes(n)))
     },
     deps (newVal, oldVal) {
       this.fabricDraw(this.elems, this.deps)
     }
   },
-
   mounted () {
+    // Создание объекта рисования по ссылке на элемент canvas в разметке
     this.canvas = new fabric.Canvas(this.$refs.canvas, {
       width: this.width,
       height: this.height,
@@ -203,6 +210,7 @@ export default {
       backgroundColor: '#fff',
       selection: false
     })
+    // Регистрация обработчиков различных событий в области рисования
     this.canvas.on('object:moving', this.nodeMoving)
     this.canvas.on('mouse:up', this.nodeMouseUp)
     this.canvas.on('object:modified', this.nodeModified)
@@ -211,18 +219,17 @@ export default {
     this.canvas.on('selection:updated', this.selectionUpdated)
     this.canvas.on('mouse:move', this.mouseMove)
     this.canvas.on('mouse:down', this.mouseDown)
+    // Первая, безусловная отрисовка элементов и связей в области рисования
     this.fabricDraw(this.elems, this.deps)
-    // Start message
-    // this.nodeDeleteDialogHandler = uiMessage(this.nodeDeleteDialogItOk, this.nodeDeleteDialogItCancel)
-    // this.depDeleteDialogHandler = uiMessage(this.depDeleteDialogItOk, this.depDeleteDialogItCancel)
   },
-
   methods: {
-    // ...mapMutations(['addElem', 'moveElem']),
+    // Метод отрисовки элементов и связей в области рисования
     fabricDraw (elems, deps) {
+      // Удалить весь список фабрик-объектов в области рисования
       this.canvas.remove(...this.canvas.getObjects())
       elems.forEach(n => {
         var color = 'white'
+        // В зависимости от состояния узла выбираем цвет
         if (n.status === '1') {
           color = '#ccc'
         } else if (n.status === '2' && n.dependenciesSatisfied) {
@@ -238,29 +245,40 @@ export default {
         } else if (n.status === '6') {
           color = '#26de81'
         }
+        // Создаем объект "окружность" на основе данных текущего узла
         var nodeCircle = new fabric.Circle({id: n.id, fill: color, radius: n.radius, top: n.top, left: n.left})
+        // ... добавляем его в область рисования
         this.canvas.add(nodeCircle)
+        // ... отправляем его на самый дальний план
         this.canvas.sendToBack(nodeCircle)
+        // Создаем объект "текст" на основе заголовка текущего узла
         var nodeTitleText = new fabric.Text(n.title, {id: n.id + '_title', top: n.top - 20, left: n.left, fontSize: 20})
-        // console.log('nodeTitleText', nodeTitleText)
+        // ... добавляем его в область рисования в конец списка объектов
         this.canvas.insertAt(nodeTitleText, this.canvas.getObjects().length)
+        // ... отключаем у него элементы управления, рамки и возможность выделения
         nodeTitleText.hasControls = nodeTitleText.hasBorders = nodeTitleText.selectable = false
       }
       )
+      // После рисования всех узлов и их заголовков вызываем рисование всех линий, отображающих стрелки связей
       this.drawLines(elems, deps)
     },
-
+    // Метод обработки клика по плавающей кнопке действия
     addNodeClick () {
+      // Вызов очистки формы редактирования данных узла
       this.resetForm()
+      // Переключение флага режима формы редактирования данных узла в состояние создания нового узла
       this.formMode = 'create'
+      // Вызов отображения боковой панели с формой редактирования данных узла
       showSidebar()
     },
+    // Метод обработки перетаскивания узла по области рисования
     nodeMoving (ev) {
       this.isObjectMoving = true
       if (this.selectedNodeId !== null) {
         const modifiedObject = ev.target
         const newLeft = modifiedObject.get('left')
         const newTop = modifiedObject.get('top')
+        // Вслед за отображением узла перемещаем его заголовок
         const movingNodeText =
           this.canvas.getObjects().filter(
             o => (o.get('type') === 'text') && (o.get('id') === this.selectedNodeId + '_title')
@@ -271,6 +289,7 @@ export default {
         })
       }
     },
+    // Метод обработки отпускания узла указателем мыши после перетаскивания
     nodeMouseUp (ev) {
       if (this.isObjectMoving) {
         var modifiedObject = ev.target
