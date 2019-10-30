@@ -104,7 +104,6 @@ import { fabric } from 'fabric'
 import { VueContext } from 'vue-context'
 import { uiMessage, showMessage, showSidebar, hideSidebar } from '@/assets/js/uimini.js'
 import { required, minLength, maxLength } from 'vuelidate/lib/validators'
-// import { mapMutations } from 'vuex'
 
 export default {
   name: 'Canvas',
@@ -231,18 +230,25 @@ export default {
         var color = 'white'
         // В зависимости от состояния узла выбираем цвет
         if (n.status === '1') {
+          // New - СветлоСерый
           color = '#ccc'
         } else if (n.status === '2' && n.dependenciesSatisfied) {
+          // Scheduled (some deps are not satisfied) - Красный
           color = '#0066FF'
         } else if (n.status === '2' && !n.dependenciesSatisfied) {
+          // Scheduled - Синий
           color = '#FF0000'
         } else if (n.status === '3') {
+          // Started - Желтый
           color = '#FFFF00'
         } else if (n.status === '4') {
+          // Suspended - ТемноСерый
           color = '#999999'
         } else if (n.status === '5') {
+          // Cancelled - Черный
           color = '#333333'
         } else if (n.status === '6') {
+          // Done - Зеленый
           color = '#26de81'
         }
         // Создаем объект "окружность" на основе данных текущего узла
@@ -297,6 +303,7 @@ export default {
         const id = modifiedObject.get('id')
         const newLeft = modifiedObject.get('left')
         const newTop = modifiedObject.get('top')
+        // TODO сохраняем новые координаты узла после окончания его перетаскивания
         this.$store.dispatch('editNode', {
           id: id,
           changes: {
@@ -312,8 +319,10 @@ export default {
           })
       }
     },
+    // Метод обработки выделения узла указателем мыши (ЛКМ)
     selectionCreated (ev) {
       var selectedObject = this.canvas.getActiveObject()
+      // Обрабатываются только выделения узлов и линий
       if (typeof (this.canvas.getActiveObject()) !== 'undefined') {
         this.selectedNodeId = null
         this.selectedDepId = null
@@ -324,11 +333,13 @@ export default {
         }
       }
     },
+    // Метод обработки снятия выделения с узла или связи
     selectionCleared (ev) {
       this.selectedNodeId = null
       this.selectedDepId = null
       hideSidebar()
     },
+    // Метод обработки изменения выделения узла или связи
     selectionUpdated (ev) {
       var updatedObject = this.canvas.getActiveObject()
       if (typeof (updatedObject) !== 'undefined') {
@@ -342,47 +353,57 @@ export default {
       }
     },
     // Handle mousemove when dependence creation hint is shown
+    // Метод обработки перемещения курсора мыши, когда показана подсказка создания зависимости
     mouseMove (ev) {
       if (this.isObjectMoving) {
         var modifiedObject = ev.target
         const id = modifiedObject.get('id')
         const newLeft = modifiedObject.get('left')
         const newTop = modifiedObject.get('top')
+        // Вызов перерисовки стрелки зависимости
         this.moveLine(id, newLeft, newTop, this.deps)
       }
     },
     // Handle mousedown when dependence creation is finishing
+    // Метод обработки клика курсора мыши, которым завершается создание зависимости
+    // (должен указывать на узел, зависимость от которого образуется)
     mouseDown (ev) {
       if (this.dependenceCreationHint !== null) {
         if (ev.target && this.checkNode) {
           const fromNodeId = this.dependentNodeId
           const toNodeId = this.selectedNodeId
-          const selectedNodeStatus = this.selectedNode.status
+          // const selectedNodeStatus = this.selectedNode.status
+          // Отправка в хранилище команды "Создать новую зависимость"
           this.$store.dispatch('newDep', {
             fromNodeId: fromNodeId,
             toNodeId: toNodeId
           })
             .then(() => {
+              // Если удалось - устанавливается флаг успешно завершенной операции
               this.submitStatus = 'OK'
-              if (selectedNodeStatus !== '6') {
-                const fromNode = this.elems.filter(n => n.id === fromNodeId)[0]
-                if (fromNode.dependenciesSatisfied) {
-                  this.$store.dispatch('editNode', {
-                    id: fromNodeId,
-                    changes: {
-                      dependenciesSatisfied: false
-                    }
+              // Получем из хранилища модель зависимого узла, ОТ которого должна идти стрелка
+              const fromNode = this.elems.filter(n => n.id === fromNodeId)[0]
+              // Получем из хранилища модель зависимого узла, К которому должна идти стрелка
+              const toNode = this.elems.filter(n => n.id === toNodeId)[0]
+              // Если ранее все зависимости узла были удовлетворены,
+              // но статус выделенного узла (от которого будет зависимость) - не "Сделано"
+              if (fromNode.dependenciesSatisfied && toNode.status !== '6') {
+                // Изменяем в хранилище состояние модели на "не все зависимости удовлетворены"
+                this.$store.dispatch('editNode', {
+                  id: fromNodeId,
+                  changes: {
+                    dependenciesSatisfied: false
+                  }
+                })
+                  .then(() => {
+                    this.submitStatus = 'OK'
+                    // Перерисовываем всю область рисования
+                    this.fabricDraw(this.elems, this.deps)
                   })
-                    .then(() => {
-                      this.submitStatus = 'OK'
-                      this.fabricDraw(this.elems, this.deps)
-                    })
-                    .catch(err => {
-                      this.submitStatus = err.message
-                    })
-                }
+                  .catch(err => {
+                    this.submitStatus = err.message
+                  })
               }
-              // this.fabricDraw(this.elems)
             })
             .catch(err => {
               this.submitStatus = err.message
@@ -405,7 +426,7 @@ export default {
         this.nodeDeleteDialogHandler = uiMessage(this.nodeDeleteDialogItOk, this.nodeDeleteDialogItCancel)
         this.nodeDeleteDialogHandler.call()
       } else if (id === 'addDependencyContextMenuItem') {
-        // TODO
+        // Выбран пункт контекстного меню области рисования "Добавить зависимость"
         var hintText =
           new fabric.Text(
             'Select parent node'
@@ -417,7 +438,6 @@ export default {
             })
         this.canvas.insertAt(hintText, this.canvas.getObjects().length)
         hintText.hasControls = hintText.hasBorders = hintText.selectable = false
-        // hintText.bringToFront()
         this.dependenceCreationHint = hintText
         this.dependentNodeId = this.selectedNodeId
       } else if (id === 'editNodeContextMenuItem') {
@@ -455,6 +475,8 @@ export default {
       this.depDeleteDialogHandler = null
       showMessage('#cancelledMessage')
     },
+    // Метод установки выбранного узла и флага удовлетворенности его зависимостей
+    // для дальнейшего редактирования в форме
     setForm () {
       if (this.checkNode) {
         this.selectedNode = this.elems.find(elem => elem.id === this.selectedNodeId)
