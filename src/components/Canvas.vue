@@ -516,7 +516,7 @@ export default {
         // TODO оптимизировать количество вызовов этой логики:
         // только когда изменился статус узла
         // filter all deps with nodeTo == this.selectedNodeId
-        // Отбор моделей зависимостей, входящих в данный узел 
+        // Отбор моделей зависимостей, входящих в данный узел
         const depsTo = this.deps.filter(d => d.toNodeId === this.selectedNodeId)
         // for each dep filter source Node
         // По каждой из зависимостей найти узел, из которого она исходит
@@ -532,7 +532,7 @@ export default {
         }
         )
         // do edit selected Node
-        // TODO Вызов действия сохранения результатов редактирования узла в хранилище 
+        // TODO Вызов действия сохранения результатов редактирования узла в хранилище
         this.$store.dispatch('editNode', {
           id: this.selectedNodeId,
           changes: {
