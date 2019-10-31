@@ -4,12 +4,12 @@ import Node from './NodeModel'
 
 export default ({
   state: {
-    elems: []
+    // Локальный массив элементов для отображения (моделей узлов целей)
+    elems: [],
+    // ... для узлов шаблона, выбранного в разделе "Шаблоны"
+    templateElems: []
   },
   mutations: {
-    /* addElem (state, payload) {
-      state.elems.push(payload)
-    }, */
     newNode (
       state,
       {
@@ -22,8 +22,7 @@ export default ({
         dependenciesSatisfied,
         radius,
         top,
-        left// ,
-        // user
+        left
       }
     ) {
       state.elems.push({
@@ -36,27 +35,12 @@ export default ({
         dependenciesSatisfied,
         radius,
         top,
-        left// ,
-        // user
+        left
       })
-      // console.log(state.elems)
     },
     loadNodes (state, payload) {
-      state.elems = payload
+      state[payload.target] = payload.nodes
     },
-    /* moveElem (state, payload) {
-      const oldElem = state.elems.find(elem => elem.attrs.id === payload.id)
-      const newElem = {
-        attrs: {
-          id: oldElem.attrs.id,
-          state: oldElem.attrs.state,
-          radius: oldElem.attrs.radius,
-          left: (payload.left !== undefined) ? payload.left : oldElem.left,
-          top: (payload.top !== undefined) ? payload.top : oldElem.top
-        }
-      }
-      Object.assign(oldElem, newElem)
-    } */
     editNode (state, payload) {
       const oldElem = state.elems.find(elem => elem.id === payload.id)
       const newElem = {
@@ -72,10 +56,6 @@ export default ({
         top: (payload.top !== undefined) ? payload.top : oldElem.top
       }
       Object.assign(oldElem, newElem)
-      /* const node = state.elems.find(elem => elem.id === payload.id)
-      node.status = payload.status
-      node.top = payload.top
-      node.left = payload.left */
     },
     deleteNode (state, payload) {
       const deletedNode = state.elems.find(elem => elem.id === payload.id)
@@ -132,7 +112,6 @@ export default ({
             // .orderByChild('user')
             // .equalTo(getters.user.id)
             .once('value')
-        // console.log(nodesResponse)
         // Get value
         const nodes = nodesResponse.val()
         // console.log(nodes)
@@ -159,8 +138,12 @@ export default ({
               )
             )
           })
+          const payload = {
+            target: 'elems',
+            nodes: nodesArray
+          }
           // Send mutation
-          commit('loadNodes', nodesArray)
+          commit('loadNodes', payload)
         }
 
         commit('setLoading', false)
