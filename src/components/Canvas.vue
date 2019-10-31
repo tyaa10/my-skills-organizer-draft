@@ -373,7 +373,7 @@ export default {
           const fromNodeId = this.dependentNodeId
           const toNodeId = this.selectedNodeId
           // const selectedNodeStatus = this.selectedNode.status
-          // Отправка в хранилище команды "Создать новую зависимость"
+          // TODO Отправка в хранилище команды "Создать новую зависимость"
           this.$store.dispatch('newDep', {
             fromNodeId: fromNodeId,
             toNodeId: toNodeId
@@ -388,7 +388,7 @@ export default {
               // Если ранее все зависимости узла были удовлетворены,
               // но статус выделенного узла (от которого будет зависимость) - не "Сделано"
               if (fromNode.dependenciesSatisfied && toNode.status !== '6') {
-                // Изменяем в хранилище состояние модели на "не все зависимости удовлетворены"
+                // TODO Изменяем в хранилище состояние модели на "не все зависимости удовлетворены"
                 this.$store.dispatch('editNode', {
                   id: fromNodeId,
                   changes: {
@@ -411,6 +411,7 @@ export default {
         } else {
           console.log('dependency creation is cancelled')
         }
+        // После образования зависимости удаляем текст соответствующей подсказки
         this.canvas.remove(this.dependenceCreationHint)
         this.dependenceCreationHint = null
         this.dependentNodeId = null
@@ -450,6 +451,7 @@ export default {
       }
     },
     nodeDeleteDialogItOk () {
+      // TODO
       this.$store.dispatch('deleteNode', this.selectedNodeId)
         .then(() => {
           this.nodeDeleteDialogHandler = null
@@ -460,19 +462,24 @@ export default {
       this.nodeDeleteDialogHandler = null
       showMessage('#cancelledMessage')
     },
+    // Обработчик клика ОК в диалоге подстверждения удаления зависимости
     depDeleteDialogItOk () {
+      // Поиск дата-модели зависимого узла (из которого исходит стрелка)ы
       const fromNodeId = this.deps.filter(d => d.id === this.selectedDepId)[0].fromNodeId
       const sourceNode = this.elems.filter(n => n.id === fromNodeId)[0]
+      // TODO Вызываем в хранилище действие удаления выделенной зависимости
       this.$store.dispatch('deleteDep', this.selectedDepId)
         .then(() => {
           this.depDeleteDialogHandler = null
+          // Затем вызываем функцию пересчета удовлетворенности зависимостей для зависимого узла
           this.recomputeNodeDeps(sourceNode)
+          // Вызываем отображение всплывающего сообщения "Сделано"
           showMessage('#doneMessage')
         })
-      // this.fabricDraw(this.elems, this.deps)
     },
     depDeleteDialogItCancel () {
       this.depDeleteDialogHandler = null
+      // Вызываем отображение всплывающего сообщения "Отменено"
       showMessage('#cancelledMessage')
     },
     // Метод установки выбранного узла и флага удовлетворенности его зависимостей
@@ -483,8 +490,10 @@ export default {
         this.selectedNodeDepsSatisfied = this.selectedNode.dependenciesSatisfied
       }
     },
+    // Обработчик клика по кнопке "Сделано" в форме создания/редактирования узла
     applyNodeDataClick () {
       if (this.formMode === 'create') {
+        // TODO
         this.$store.dispatch('newNode', {
           title: this.selectedNode.title,
           type: this.selectedNode.type,
@@ -498,27 +507,32 @@ export default {
         })
           .then(() => {
             this.submitStatus = 'OK'
-            // this.fabricDraw(this.elems)
           })
           .catch(err => {
             this.submitStatus = err.message
           })
       } else if (this.formMode === 'edit') {
-        // -1 filter all deps with nodeTo == this.selectedNodeId
+        // Обработка отправки формы в режиме редактирования
+        // TODO оптимизировать количество вызовов этой логики:
+        // только когда изменился статус узла
+        // filter all deps with nodeTo == this.selectedNodeId
+        // Отбор моделей зависимостей, входящих в данный узел 
         const depsTo = this.deps.filter(d => d.toNodeId === this.selectedNodeId)
-        // console.log('depsTo', depsTo)
-        // 0 for each dep filter source Node
+        // for each dep filter source Node
+        // По каждой из зависимостей найти узел, из которого она исходит
         depsTo.forEach(dTo => {
           const sourceNodes = this.elems.filter(n => n.id === dTo.fromNodeId)
-          // console.log('sourceNodes', sourceNodes)
-          // 1 fore each source Node
+          // fore each source Node
+          // Для каждого узла, из которого зависимость входит в отредактированный узел
           sourceNodes.forEach(n => {
+            // Вызать пересчет удовлетворенности зависимостей
             this.recomputeNodeDeps(n)
           }
           )
         }
         )
         // do edit selected Node
+        // TODO Вызов действия сохранения результатов редактирования узла в хранилище 
         this.$store.dispatch('editNode', {
           id: this.selectedNodeId,
           changes: {
@@ -540,6 +554,7 @@ export default {
       hideSidebar()
       this.formMode = ''
     },
+    // Метод сброса состояния формы создания/редактирования узла
     resetForm () {
       this.selectedNode = {
         title: '',
@@ -551,6 +566,7 @@ export default {
       hideSidebar()
       this.formMode = ''
     },
+    // Метод настраиваемого рисования линии
     makeLine (id, coords) {
       return new fabric.Line(coords, {
         id: id,
@@ -564,6 +580,7 @@ export default {
         lockMovementY: true
       })
     },
+    // Метод рисования стрелки на основе рисования двух коротких линий
     makeArrow (lineId, x1, y1, x2, y2) {
       // координаты центра отрезка
       const x3 = (x1 + x2) / 2
@@ -602,13 +619,17 @@ export default {
         })
       }
     },
+    // Метод рисования всех зависимостей
+    // на основе методов рисования отдельных линий и стрелок
     drawLines (elems, deps) {
+      // Удаляем все объекты Линия в области рисования
       this.canvas.remove(...this.canvas.getObjects().filter(o => o.get('type') === 'line'))
       var lostLinesIds = []
       var lostLinesSourceNodes = []
       deps.forEach(d => {
         const nodeFrom = elems.filter(n => n.id === d.fromNodeId)
         const nodeTo = elems.filter(n => n.id === d.toNodeId)
+        // Если для зависимости нашелись оба узла - рисуем ее изображение
         if (nodeFrom[0] && nodeTo[0]) {
           var line = this.makeLine(d.id, [ nodeFrom[0].left + 50, nodeFrom[0].top + 50, nodeTo[0].left + 50, nodeTo[0].top + 50 ])
           var arrow = this.makeArrow(d.id, nodeFrom[0].left + 50, nodeFrom[0].top + 50, nodeTo[0].left + 50, nodeTo[0].top + 50)
@@ -618,9 +639,12 @@ export default {
           this.canvas.sendToBack(arrow.arrow2)
           this.canvas.renderAll()
         } else {
+          // ... иначе - добавляем ИД в список "потерянных" зависимостей,
+          // если его там еще нет
           if (!lostLinesIds.includes(d.id)) {
             lostLinesIds.push(d.id)
           }
+          // и собираем в отдельный список узлы-источники "потерянных" зависимостей
           const sourceNode = this.elems.filter(n => n.id === d.fromNodeId)[0]
           if (!lostLinesSourceNodes.includes(sourceNode)) {
             lostLinesSourceNodes.push(sourceNode)
@@ -628,9 +652,9 @@ export default {
         }
       }
       )
+      // Удаляем из хранилища все "потерянные" зависимости
       lostLinesIds.forEach(lostLineId => {
-        // const deletedDep = deps.find(dep => dep.id === lostLineId)
-        // deps.splice(deps.indexOf(deletedDep), 1)
+        // TODO
         this.$store.dispatch('deleteDep', lostLineId)
           .then(() => {
             console.log('Lost dependency ' + lostLineId + ' is deleted')
@@ -640,6 +664,8 @@ export default {
         this.recomputeNodeDeps(lostLineSourceNode)
       })
     },
+    // Метод перерисовки изображения зависимости
+    // при перетаскивании узлов, которые она связывает
     moveLine (nodeId, newLeft, newTop, deps) {
       const depsFromIds = deps.filter(d => d.fromNodeId === nodeId).map(d => d.id)
       const depsToIds = deps.filter(d => d.toNodeId === nodeId).map(d => d.id)
@@ -696,45 +722,41 @@ export default {
         this.canvas.sendToBack(lineArrow2)
       }
       )
+      // Вызов стандартной функции объкта области рисования "Отрисовать все"
       this.canvas.renderAll()
-      // this.canvas.remove(...lines.filter(o => o.get('id') === 'line'))
-      /* deps.forEach(d => {
-        const nodeFrom = elems.filter(n => n.id === d.fromNodeId)
-        const nodeTo = elems.filter(n => n.id === d.toNodeId)
-        var line = this.makeLine([ nodeFrom[0].left + 50, nodeFrom[0].top + 50, nodeTo[0].left + 50, nodeTo[0].top + 50 ])
-        this.canvas.add(line)
-        this.canvas.sendToBack(line)
-        this.canvas.renderAll()
-      }
-      ) */
     },
+    // Метод пересчета удовлетворенности всех зависимостей для узла node
     recomputeNodeDeps (node) {
+      // Оптимистичное предположение, что все зависимости удовлетворены
       var allDepsSutisfied = true
       // 2 filter all deps with nodeFrom == currentNode.selectedNodeId
+      // Отбор всех зависимостей, исходящих из данного узла
       const nodeOutgoingDeps = this.deps.filter(dFrom => dFrom.fromNodeId === node.id)
-      // console.log('nodeOutgoingDeps', nodeOutgoingDeps)
       // 3 fore each dep find a target Node by nodeTo
+      // some возвращает true, если вызов callback вернёт true хотя бы для одного элемента nodeOutgoingDeps,
+      // причем, как только callback возвращает true первый раз, выполнение some прекращается,
+      // таким образом, после выявления хотя бы одной неудовлетворенной зависимости
+      // обработка массива прекращается для экономии ресурсов
       nodeOutgoingDeps.some(dOut => {
+        // Находим узел, от которого существует данная зависимость
+        // (в который входит изображение зависимости)
         const currentDepNode = this.elems.filter(n => n.id === dOut.toNodeId)[0]
         // 4 check if Node's property status == completed
-        // console.log('currentDepNode', currentDepNode)
         if (currentDepNode) {
+          // Если статус узла не "Выполнено" -
+          // сбрасываем флаг "Все зависимости удовлетворены" и прекращаем работу some
           if (currentDepNode.status !== '6') {
-            // console.log(currentDepNode)
             allDepsSutisfied = false
             return true
           }
         }
       }
       )
-      // console.log('node.dependenciesSatisfied', node.dependenciesSatisfied)
-      // console.log('allDepsSutisfied', allDepsSutisfied)
-      // if (!node.dependenciesSatisfied && allDepsSutisfied) {
+      // Если ранее у узла не были удовлетворены все зависимости,
+      // и теперь стали - меняем соответствующее значение в его состоянии на "Все удовлетворены"
       if (!node.dependenciesSatisfied && allDepsSutisfied) {
         // 5 if all the Nodes are completed then set edited Node's property dependenciesSatisfied to true
-        // console.log('allDepsSutisfied', allDepsSutisfied)
-        // console.log('node', node)
-        // console.log('node', node.id)
+        // TODO
         this.$store.dispatch('editNode', {
           id: node.id,
           changes: {
@@ -748,9 +770,10 @@ export default {
           .catch(err => {
             this.submitStatus = err.message
           })
-      // } else if (node.dependenciesSatisfied && !allDepsSutisfied) {
       } else if (node.dependenciesSatisfied && !allDepsSutisfied) {
-        // 5 if all the Nodes are completed then set edited Node's property dependenciesSatisfied to true
+        // Если ранее у узла были удовлетворены все зависимости,
+        // и теперь - нет - меняем соответствующее значение в его состоянии на "Не все удовлетворены"
+        // TODO 5 if all the Nodes are completed then set edited Node's property dependenciesSatisfied to true
         this.$store.dispatch('editNode', {
           id: node.id,
           changes: {
@@ -765,10 +788,7 @@ export default {
             this.submitStatus = err.message
           })
       }
-    }/* ,
-    nodeModified (ev) {
-      var modifiedObject = ev.target
-    } */
+    }
   }
 }
 </script>
