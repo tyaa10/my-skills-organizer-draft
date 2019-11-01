@@ -4,18 +4,25 @@
     .container
       h1.ui-title-1 Templates
     .container
-      FabricCanvas(:elemsGetter="elemsGetter")
+      Experimental(:elems-getter="elemsGetter", :deps-getter="depsGetter", :action-names="actionNames")
 </template>
 <script>
-import FabricCanvas from '@/components/FabricCanvas.vue'
+import Experimental from '@/components/Experimental.vue'
 export default {
   components: {
-    FabricCanvas
+    Experimental
   },
   data () {
     return {
-      elemsGetter: this.$store.getters.elems/* ,
-      templateElemsGetter: this.$store.getters.templateElems */
+      elemsGetter: 'elems',
+      depsGetter: 'deps',
+      actionNames: {
+        newNode: 'newNode',
+        editNode: 'editNode',
+        deleteNode: 'deleteNode',
+        newDep: 'newDep',
+        deleteDep: 'deleteDep'
+      }
     }
   }
 }

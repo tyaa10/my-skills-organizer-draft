@@ -657,7 +657,7 @@ export default {
         // TODO
         this.$store.dispatch('deleteDep', lostLineId)
           .then(() => {
-            console.log('Lost dependency ' + lostLineId + ' is deleted')
+            console.log('Lost dependency ' + lostLineId + ' removed')
           })
       })
       lostLinesSourceNodes.forEach(lostLineSourceNode => {
@@ -727,66 +727,68 @@ export default {
     },
     // Метод пересчета удовлетворенности всех зависимостей для узла node
     recomputeNodeDeps (node) {
-      // Оптимистичное предположение, что все зависимости удовлетворены
-      var allDepsSutisfied = true
-      // 2 filter all deps with nodeFrom == currentNode.selectedNodeId
-      // Отбор всех зависимостей, исходящих из данного узла
-      const nodeOutgoingDeps = this.deps.filter(dFrom => dFrom.fromNodeId === node.id)
-      // 3 fore each dep find a target Node by nodeTo
-      // some возвращает true, если вызов callback вернёт true хотя бы для одного элемента nodeOutgoingDeps,
-      // причем, как только callback возвращает true первый раз, выполнение some прекращается,
-      // таким образом, после выявления хотя бы одной неудовлетворенной зависимости
-      // обработка массива прекращается для экономии ресурсов
-      nodeOutgoingDeps.some(dOut => {
-        // Находим узел, от которого существует данная зависимость
-        // (в который входит изображение зависимости)
-        const currentDepNode = this.elems.filter(n => n.id === dOut.toNodeId)[0]
-        // 4 check if Node's property status == completed
-        if (currentDepNode) {
-          // Если статус узла не "Выполнено" -
-          // сбрасываем флаг "Все зависимости удовлетворены" и прекращаем работу some
-          if (currentDepNode.status !== '6') {
-            allDepsSutisfied = false
-            return true
+      if (node) {
+        // Оптимистичное предположение, что все зависимости удовлетворены
+        var allDepsSutisfied = true
+        // 2 filter all deps with nodeFrom == currentNode.selectedNodeId
+        // Отбор всех зависимостей, исходящих из данного узла
+        const nodeOutgoingDeps = this.deps.filter(dFrom => dFrom.fromNodeId === node.id)
+        // 3 fore each dep find a target Node by nodeTo
+        // some возвращает true, если вызов callback вернёт true хотя бы для одного элемента nodeOutgoingDeps,
+        // причем, как только callback возвращает true первый раз, выполнение some прекращается,
+        // таким образом, после выявления хотя бы одной неудовлетворенной зависимости
+        // обработка массива прекращается для экономии ресурсов
+        nodeOutgoingDeps.some(dOut => {
+          // Находим узел, от которого существует данная зависимость
+          // (в который входит изображение зависимости)
+          const currentDepNode = this.elems.filter(n => n.id === dOut.toNodeId)[0]
+          // 4 check if Node's property status == completed
+          if (currentDepNode) {
+            // Если статус узла не "Выполнено" -
+            // сбрасываем флаг "Все зависимости удовлетворены" и прекращаем работу some
+            if (currentDepNode.status !== '6') {
+              allDepsSutisfied = false
+              return true
+            }
           }
         }
-      }
-      )
-      // Если ранее у узла не были удовлетворены все зависимости,
-      // и теперь стали - меняем соответствующее значение в его состоянии на "Все удовлетворены"
-      if (!node.dependenciesSatisfied && allDepsSutisfied) {
-        // 5 if all the Nodes are completed then set edited Node's property dependenciesSatisfied to true
-        // TODO
-        this.$store.dispatch('editNode', {
-          id: node.id,
-          changes: {
-            dependenciesSatisfied: true
-          }
-        })
-          .then(() => {
-            this.fabricDraw(this.elems, this.deps)
-            this.submitStatus = 'OK'
+        )
+        // Если ранее у узла не были удовлетворены все зависимости,
+        // и теперь стали - меняем соответствующее значение в его состоянии на "Все удовлетворены"
+        if (!node.dependenciesSatisfied && allDepsSutisfied) {
+          // 5 if all the Nodes are completed then set edited Node's property dependenciesSatisfied to true
+          // TODO
+          this.$store.dispatch('editNode', {
+            id: node.id,
+            changes: {
+              dependenciesSatisfied: true
+            }
           })
-          .catch(err => {
-            this.submitStatus = err.message
+            .then(() => {
+              this.fabricDraw(this.elems, this.deps)
+              this.submitStatus = 'OK'
+            })
+            .catch(err => {
+              this.submitStatus = err.message
+            })
+        } else if (node.dependenciesSatisfied && !allDepsSutisfied) {
+          // Если ранее у узла были удовлетворены все зависимости,
+          // и теперь - нет - меняем соответствующее значение в его состоянии на "Не все удовлетворены"
+          // TODO 5 if all the Nodes are completed then set edited Node's property dependenciesSatisfied to true
+          this.$store.dispatch('editNode', {
+            id: node.id,
+            changes: {
+              dependenciesSatisfied: false
+            }
           })
-      } else if (node.dependenciesSatisfied && !allDepsSutisfied) {
-        // Если ранее у узла были удовлетворены все зависимости,
-        // и теперь - нет - меняем соответствующее значение в его состоянии на "Не все удовлетворены"
-        // TODO 5 if all the Nodes are completed then set edited Node's property dependenciesSatisfied to true
-        this.$store.dispatch('editNode', {
-          id: node.id,
-          changes: {
-            dependenciesSatisfied: false
-          }
-        })
-          .then(() => {
-            this.fabricDraw(this.elems, this.deps)
-            this.submitStatus = 'OK'
-          })
-          .catch(err => {
-            this.submitStatus = err.message
-          })
+            .then(() => {
+              this.fabricDraw(this.elems, this.deps)
+              this.submitStatus = 'OK'
+            })
+            .catch(err => {
+              this.submitStatus = err.message
+            })
+        }
       }
     }
   }

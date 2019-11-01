@@ -35,14 +35,27 @@
   // Секция, содержащая экземпляр компонента Canvas
   // для отображения основного дерева целей и задач
   section#c(ref='canvasContainer')
-    Canvas
+    FabricCanvas(:elems-getter="elemsGetter", :deps-getter="depsGetter", :action-names="actionNames")
 </template>
 
 <script>
-import Canvas from '@/components/Canvas.vue'
+import FabricCanvas from '@/components/FabricCanvas.vue'
 export default {
   components: {
-    Canvas
+    FabricCanvas
+  },
+  data () {
+    return {
+      elemsGetter: 'elems',
+      depsGetter: 'deps',
+      actionNames: {
+        newNode: 'newNode',
+        editNode: 'editNode',
+        deleteNode: 'deleteNode',
+        newDep: 'newDep',
+        deleteDep: 'deleteDep'
+      }
+    }
   }
 }
 </script>

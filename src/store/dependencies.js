@@ -4,7 +4,8 @@ import Dep from './DependencyModel'
 
 export default ({
   state: {
-    deps: []
+    deps: [],
+    templateDeps: []
   },
   mutations: {
     newDep (
@@ -22,7 +23,7 @@ export default ({
       })
     },
     loadDeps (state, payload) {
-      state.deps = payload
+      state[payload.target] = payload.deps
     },
     deleteDep (state, payload) {
       const deletedDep = state.deps.find(dep => dep.id === payload.id)
@@ -77,7 +78,11 @@ export default ({
             )
           })
           // Send mutation
-          commit('loadDeps', depsArray)
+          const payload = {
+            target: 'deps',
+            deps: depsArray
+          }
+          commit('loadDeps', payload)
         }
 
         commit('setLoading', false)
