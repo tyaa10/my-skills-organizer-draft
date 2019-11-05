@@ -27,11 +27,23 @@ function showSidebar () {
   document.querySelector('.sidebar').classList.add('full')
   document.querySelector('.sidebar').style = 'left: 0'
 }
+// Функция отображения правой боковой панели
+function showRightSidebar () {
+  document.querySelector('.right-sidebar').classList.add('active')
+  document.querySelector('.right-sidebar').classList.add('full')
+  document.querySelector('.right-sidebar').style = 'right: 0'
+}
 // Функция скрытия боковой панели
 function hideSidebar () {
   document.querySelector('.sidebar').classList.remove('active')
   document.querySelector('.sidebar').classList.remove('full')
   document.querySelector('.sidebar').style = 'left: -320px'
+}
+// Функция скрытия правой боковой панели
+function hideRightSidebar () {
+  document.querySelector('.right-sidebar').classList.remove('active')
+  document.querySelector('.right-sidebar').classList.remove('full')
+  document.querySelector('.right-sidebar').style = 'right: -320px'
 }
 
 //
@@ -209,4 +221,4 @@ function uiMessage (okButtonHandler, cancelButtonHandler) { // eslint-disable-li
   }
 }
 // Экспорт всех необходимых функций из модуля
-export { showMessage, uiMessage, toggleSidebar, showSidebar, hideSidebar }
+export { showMessage, uiMessage, toggleSidebar, showSidebar, hideSidebar, showRightSidebar, hideRightSidebar }

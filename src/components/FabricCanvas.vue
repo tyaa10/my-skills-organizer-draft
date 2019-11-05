@@ -158,12 +158,11 @@ export default {
   computed: {
     elems () {
       // TODO источник данных об узлах
-      console.log(this.elemsGetter)
-      return this.$store.getters[this.elemsGetter] || []
+      return this.$store.getters[this.elemsGetter]
     },
     deps () {
       // TODO источник данных о связях
-      return this.$store.getters[this.depsGetter] || []
+      return this.$store.getters[this.depsGetter]
     },
     width () {
       // Вычисление ширины области рисования

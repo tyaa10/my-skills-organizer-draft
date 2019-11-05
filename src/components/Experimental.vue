@@ -2,7 +2,7 @@
 .wrapper
   section
     .container
-      h1.ui-title-1 FabricCanvas
+      h1.ui-title-1 Skills Tree Stats
     .container
       p Elems count: {{this.$store.getters[this.elemsGetter].length}}
       p Deps count: {{this.$store.getters[this.depsGetter].length}}
@@ -16,7 +16,6 @@ export default {
   },
   computed: {
     elems () {
-      console.log(this.elemsGetter)
       return this.elemsGetter
     }
   }
