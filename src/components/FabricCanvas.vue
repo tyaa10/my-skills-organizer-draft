@@ -157,11 +157,11 @@ export default {
   },
   computed: {
     elems () {
-      // TODO источник данных об узлах
+      // источник данных об узлах
       return this.$store.getters[this.elemsGetter]
     },
     deps () {
-      // TODO источник данных о связях
+      // источник данных о связях
       return this.$store.getters[this.depsGetter]
     },
     width () {

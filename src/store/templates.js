@@ -110,7 +110,7 @@ export default ({
         throw error
       }
     },
-    async loadTemplates ({commit, getters}) {
+    /* async loadTemplates ({commit, getters}) {
       commit('clearError')
       commit('setLoading', true)
       try {
@@ -146,7 +146,7 @@ export default ({
         commit('setError', error.message)
         throw error
       }
-    },
+    }, */
     async editTemplate ({commit, getters}, {id, changes}) {
       commit('clearError')
       commit('setLoading', true)

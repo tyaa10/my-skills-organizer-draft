@@ -43,7 +43,7 @@ function hideSidebar () {
 function hideRightSidebar () {
   document.querySelector('.right-sidebar').classList.remove('active')
   document.querySelector('.right-sidebar').classList.remove('full')
-  document.querySelector('.right-sidebar').style = 'right: -320px'
+  document.querySelector('.right-sidebar').style = 'right: -290px'
 }
 
 //
