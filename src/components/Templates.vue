@@ -19,9 +19,9 @@
       .sidebar-content
         .button.button-default.templates-actions-button(@click='addTempClick') +
         .button.button-default.templates-actions-button(@click='importTempClick') i
-        .button.button-default.templates-actions-button(@click='editTempClick') e
-        .button.button-default.templates-actions-button(@click='delTempClick') d
-        .button.button-default.templates-actions-button(@click='useTempClick') u
+        .button.button-default.templates-actions-button(v-if="checkTemplate" @click='editTempClick') e
+        .button.button-default.templates-actions-button(v-if="checkTemplate" @click='delTempClick') d
+        .button.button-default.templates-actions-button(v-if="checkTemplate" @click='useTempClick') u
         .sidebar-list
           transition-group
             .sidebar-item.templates-item(
@@ -31,17 +31,17 @@
               v-on:click="templatesItemClick(temp.id)"
             )
               p.ui-text-regular {{ temp.title }}
-  // Dialog Box - Delete or not delete the node
+  // Dialog Box - Create a new template
   .ui-messageBox__wrapper
     .ui-messageBox.fadeInDown
       .ui-messageBox__header
-        span.messageBox-title Create
+        span.messageBox-title {{formStaticContent[formMode].title}}
         span.button-close.ui-messageBox-close
       .ui-messageBox__content
-        span Create a New Template
+        span {{formStaticContent[formMode].description}}
         // Форма создания / редактирования узла.
         // Подавление стандартной отправки пост-запроса формой
-        form(v-on:submit.prevent='')
+        form(v-if="formMode == 'create'" v-on:submit.prevent='')
           // Привязка блока с полем ввода к свойству модели
           // с указанием текстов ошибок валидации
           .form-item(:class="{ 'form-group--error': $v.selectedTemplate.title.$error }")
@@ -98,7 +98,17 @@ export default {
       templatesSidebarShown: true,
       selectedTempId: null,
       tempCreateDialogHandler: null,
-      formMode: ''
+      formMode: 'create',
+      formStaticContent: {
+        create: {
+          title: 'Create',
+          description: 'Create a New Template'
+        },
+        delete: {
+          title: 'Delete',
+          description: 'Delete Selected Template'
+        }
+      }
     }
     /* return {
       elemsGetter: 'elems',
@@ -132,6 +142,10 @@ export default {
     temps () {
       // источник данных о шаблонах
       return this.$store.getters.temps
+    },
+    checkTemplate () {
+      // Проверка: есть ли выделенный шаблон в списке
+      return this.selectedTempId !== null
     }
   },
   /* watch: {
@@ -154,6 +168,7 @@ export default {
     },
     addTempClick () {
       console.log('addTempClick')
+      this.formMode = 'create'
       this.tempCreateDialogHandler = uiMessage(this.tempCreateDialogItOk, this.tempCreateDialogItCancel)
       this.tempCreateDialogHandler.call()
     },
@@ -162,11 +177,9 @@ export default {
     },
     delTempClick () {
       console.log('delTempClick')
-      // Вызываем в хранилище действие удаления выделенного узла
-      this.$store.dispatch('deleteTemplate', this.selectedTempId)
-        .then(() => {
-          showMessage('#doneMessage')
-        })
+      this.formMode = 'delete'
+      this.tempDeleteDialogHandler = uiMessage(this.tempDeleteDialogItOk, this.tempDeleteDialogItCancel)
+      this.tempDeleteDialogHandler.call()
     },
     importTempClick () {
       console.log('importTempClick')
@@ -193,6 +206,22 @@ export default {
       this.tempCreateDialogHandler = null
       showMessage('#cancelledMessage')
     },
+    tempDeleteDialogItOk () {
+      // Вызываем в хранилище действие создания шаблона
+      console.log('tempDeleteDialogItOk')
+      // Вызываем в хранилище действие удаления выделенного узла
+      this.$store.dispatch('deleteTemplate', this.selectedTempId)
+        .then(() => {
+          this.tempDeleteDialogHandler = null
+          showMessage('#doneMessage')
+        })
+    },
+    tempDeleteDialogItCancel () {
+      // Вызываем в хранилище действие удаления выделенного узла
+      console.log('tempDeleteDialogItCancel')
+      this.tempDeleteDialogHandler = null
+      showMessage('#cancelledMessage')
+    },
     // Метод сброса состояния формы создания/редактирования узла
     resetTempForm () {
       this.selectedTemplate = {
@@ -201,10 +230,6 @@ export default {
         access: false
       }
       this.tempFormMode = ''
-    },
-    checkTemplate () {
-      // Проверка: есть ли выделенный шаблон в списке
-      return this.selectedTempId !== null
     },
     // Метод установки выбранного шаблона
     // для дальнейшего редактирования в форме
