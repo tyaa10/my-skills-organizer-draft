@@ -17,6 +17,9 @@ export default {
   computed: {
     elems () {
       return this.elemsGetter
+    },
+    deps () {
+      return this.depsGetter
     }
   }
 }

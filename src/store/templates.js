@@ -13,20 +13,21 @@ export default ({
         id,
         title,
         description,
-        access,
-        link
+        access
       }
     ) {
       state.temps.push({
         id,
         title,
         description,
-        access,
-        link
+        access
       })
     },
     loadTemplates (state, payload) {
       state.temps = payload
+      state.temps.forEach(t => {
+        console.log(t)
+      })
     },
     editTemplate (state, payload) {
       const oldTemp = state.temps.find(temp => temp.id === payload.id)
@@ -34,8 +35,7 @@ export default ({
         id: oldTemp.id,
         title: (payload.title !== undefined) ? payload.title : oldTemp.title,
         description: (payload.description !== undefined) ? payload.description : oldTemp.description,
-        access: (payload.access !== undefined) ? payload.access : oldTemp.access,
-        link: (payload.link !== undefined) ? payload.link : oldTemp.link
+        access: (payload.access !== undefined) ? payload.access : oldTemp.access
       }
       Object.assign(oldTemp, newTemp)
     },
@@ -54,8 +54,7 @@ export default ({
         const newTemplate = new Template(
           payload.title,
           payload.description,
-          payload.access,
-          payload.link
+          payload.access
         )
         const template = await firebase.database().ref(getters.user.id + '/templates').push(newTemplate)
         // Send mutation
@@ -94,7 +93,6 @@ export default ({
                 n.title,
                 n.description,
                 n.access,
-                n.link,
                 key
               )
             )
@@ -131,7 +129,6 @@ export default ({
                 n.title,
                 n.description,
                 n.access,
-                n.link,
                 key
               )
             )

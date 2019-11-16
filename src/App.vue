@@ -67,6 +67,7 @@ export default {
         store.dispatch('loggedUser', user)
         store.dispatch('loadNodes', user)
         store.dispatch('loadDeps', user)
+        store.dispatch('loadTemplates', user)
       } else {}
     })
   },

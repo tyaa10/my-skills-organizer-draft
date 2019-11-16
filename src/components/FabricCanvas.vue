@@ -196,7 +196,6 @@ export default {
   watch: {
     // Если изменился список узлов или связей - обновляем область рисования
     elems (newVal, oldVal) {
-      console.log(this.elems)
       this.fabricDraw(this.elems, this.deps)
     },
     deps (newVal, oldVal) {
@@ -457,7 +456,7 @@ export default {
       }
     },
     nodeDeleteDialogItOk () {
-      // TODO
+      // Вызываем в хранилище действие удаления выделенного узла
       this.$store.dispatch(this.actionNames.deleteNode, this.selectedNodeId)
         .then(() => {
           this.nodeDeleteDialogHandler = null

@@ -192,7 +192,7 @@ export default ({
         await firebase.database().ref(getters.user.id + '/templates/' + templateId + '/dependencies').child(id).remove()
         const payload = {
           id,
-          target: 'deps'
+          target: 'templateDeps'
         }
         commit('deleteDep', payload)
         commit('setLoading', false)
