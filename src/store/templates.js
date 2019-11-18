@@ -45,7 +45,7 @@ export default ({
     }
   },
   actions: {
-    /* Create new Template */
+    /* Create a new Template */
     async newTemplate ({commit, getters}, payload) {
       commit('clearError')
       commit('setLoading', true)
@@ -149,6 +149,8 @@ export default ({
       commit('setLoading', true)
       try {
         // Update data fields
+        console.log(id)
+        console.log(changes)
         await firebase.database().ref(getters.user.id + '/templates').child(id).update({
           ...changes
         })

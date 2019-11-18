@@ -41,7 +41,7 @@
         span {{formStaticContent[formMode].description}}
         // Форма создания / редактирования узла.
         // Подавление стандартной отправки пост-запроса формой
-        form(v-if="formMode == 'create'" v-on:submit.prevent='')
+        form(v-if="formMode == 'create' || formMode == 'edit'" v-on:submit.prevent='')
           // Привязка блока с полем ввода к свойству модели
           // с указанием текстов ошибок валидации
           .form-item(:class="{ 'form-group--error': $v.selectedTemplate.title.$error }")
@@ -98,11 +98,17 @@ export default {
       templatesSidebarShown: true,
       selectedTempId: null,
       tempCreateDialogHandler: null,
+      tempEditDialogHandler: null,
+      tempDeleteDialogHandler: null,
       formMode: 'create',
       formStaticContent: {
         create: {
           title: 'Create',
           description: 'Create a New Template'
+        },
+        edit: {
+          title: 'Edit',
+          description: 'Edit Selected Template'
         },
         delete: {
           title: 'Delete',
@@ -167,16 +173,19 @@ export default {
       }
     },
     addTempClick () {
-      console.log('addTempClick')
+      // Вызов очистки формы редактирования данных узла
+      this.resetTempForm()
       this.formMode = 'create'
       this.tempCreateDialogHandler = uiMessage(this.tempCreateDialogItOk, this.tempCreateDialogItCancel)
       this.tempCreateDialogHandler.call()
     },
     editTempClick () {
-      console.log('editTempClick')
+      this.setTempForm()
+      this.formMode = 'edit'
+      this.tempEditDialogHandler = uiMessage(this.tempEditDialogItOk, this.tempEditDialogItCancel)
+      this.tempEditDialogHandler.call()
     },
     delTempClick () {
-      console.log('delTempClick')
       this.formMode = 'delete'
       this.tempDeleteDialogHandler = uiMessage(this.tempDeleteDialogItOk, this.tempDeleteDialogItCancel)
       this.tempDeleteDialogHandler.call()
@@ -204,6 +213,29 @@ export default {
       // Вызываем в хранилище действие удаления выделенного узла
       console.log('tempCreateDialogItCancel')
       this.tempCreateDialogHandler = null
+      showMessage('#cancelledMessage')
+    },
+    tempEditDialogItOk () {
+      // Вызываем в хранилище действие создания шаблона
+      // TODO Отправлять для обновления только изменившиеся значения
+      console.log('tempEditDialogItOk')
+      this.$store.dispatch('editTemplate', {
+        id: this.selectedTempId,
+        changes: {
+          title: this.selectedTemplate.title,
+          description: this.selectedTemplate.description,
+          access: this.selectedTemplate.access
+        }
+      })
+        .then(() => {
+          this.tempEditDialogHandler = null
+          showMessage('#doneMessage')
+        })
+    },
+    tempEditDialogItCancel () {
+      // Вызываем в хранилище действие удаления выделенного узла
+      console.log('tempEditDialogItCancel')
+      this.tempEditDialogHandler = null
       showMessage('#cancelledMessage')
     },
     tempDeleteDialogItOk () {
@@ -239,7 +271,6 @@ export default {
       }
     },
     templatesItemClick (id) {
-      console.log('templatesItemClick: ' + id)
       this.selectedTempId = id
     }
   }

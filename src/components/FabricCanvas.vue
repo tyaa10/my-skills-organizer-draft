@@ -537,7 +537,7 @@ export default {
         }
         )
         // do edit selected Node
-        // TODO Вызов действия сохранения результатов редактирования узла в хранилище
+        // TODO Отправлять для обновления только изменившиеся значения
         this.$store.dispatch(this.actionNames.editNode, {
           id: this.selectedNodeId,
           changes: {
