@@ -4,9 +4,13 @@ import Template from './TemplateModel'
 
 export default ({
   state: {
-    temps: []
+    temps: [],
+    currentTemplateId: null
   },
   mutations: {
+    setCurrentTemplateId (state, payload) {
+      state.currentTemplateId = payload
+    },
     newTemplate (
       state,
       {
@@ -25,9 +29,9 @@ export default ({
     },
     loadTemplates (state, payload) {
       state.temps = payload
-      state.temps.forEach(t => {
+      /* state.temps.forEach(t => {
         console.log(t)
-      })
+      }) */
     },
     editTemplate (state, payload) {
       const oldTemp = state.temps.find(temp => temp.id === payload.id)
@@ -57,7 +61,8 @@ export default ({
           payload.access
         )
         const template = await firebase.database().ref(getters.user.id + '/templates').push(newTemplate)
-        // Send mutation
+        // Send mutations
+        commit('setCurrentTemplateId', template.key)
         commit('newTemplate', {
           ...newTemplate,
           id: template.key
@@ -108,49 +113,12 @@ export default ({
         throw error
       }
     },
-    /* async loadTemplates ({commit, getters}) {
-      commit('clearError')
-      commit('setLoading', true)
-      try {
-        const templatesResponse =
-          await firebase.database()
-            .ref(getters.user.id + '/templates')
-            .once('value')
-        // Get value
-        const templates = templatesResponse.val()
-        if (templates != null) {
-          // New array
-          const templatesArray = []
-          // Get task key (id)
-          Object.keys(templates).forEach(key => {
-            const n = templates[key]
-            templatesArray.push(
-              new Template(
-                n.title,
-                n.description,
-                n.access,
-                key
-              )
-            )
-          })
-          // Send mutation
-          commit('loadTemplates', templatesArray)
-        }
-
-        commit('setLoading', false)
-      } catch (error) {
-        commit('setLoading', false)
-        commit('setError', error.message)
-        throw error
-      }
-    }, */
-    async editTemplate ({commit, getters}, {id, changes}) {
+    async editTemplate ({commit, getters}, {changes}) {
       commit('clearError')
       commit('setLoading', true)
       try {
         // Update data fields
-        console.log(id)
-        console.log(changes)
+        const id = getters.currentTemplateId
         await firebase.database().ref(getters.user.id + '/templates').child(id).update({
           ...changes
         })
@@ -164,12 +132,26 @@ export default ({
         throw error
       }
     },
-    async deleteTemplate ({commit, getters}, id) {
+    async deleteTemplate ({commit, getters}) {
       commit('clearError')
       commit('setLoading', true)
       try {
+        const id = getters.currentTemplateId
         await firebase.database().ref(getters.user.id + '/templates').child(id).remove()
         commit('deleteTemplate', {id})
+        commit('setLoading', false)
+      } catch (error) {
+        commit('setLoading', false)
+        commit('setError', error.message)
+        throw error
+      }
+    },
+    async setCurrentTemplateId ({commit}, id) {
+      commit('clearError')
+      commit('setLoading', true)
+      try {
+        // await firebase.database().ref(getters.user.id + '/nodes').child(id).remove()
+        commit('setCurrentTemplateId', id)
         commit('setLoading', false)
       } catch (error) {
         commit('setLoading', false)
@@ -181,6 +163,9 @@ export default ({
   getters: {
     temps (state) {
       return state.temps
+    },
+    currentTemplateId (state) {
+      return state.currentTemplateId
     }
   }
 })

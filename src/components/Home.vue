@@ -32,7 +32,7 @@
         span.ui-square.color-done
         = ' '
         span Done
-  // Секция, содержащая экземпляр компонента Canvas
+  // Секция, содержащая экземпляр пользовательского компонента FabricCanvas
   // для отображения основного дерева целей и задач
   section#c(ref='canvasContainer')
     FabricCanvas(:elems-getter="elemsGetter", :deps-getter="depsGetter", :action-names="actionNames")

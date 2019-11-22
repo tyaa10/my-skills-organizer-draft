@@ -31,7 +31,7 @@ export default ({
         templateId
       }
     ) {
-      state.deps.push({
+      state.templateDeps.push({
         id,
         fromNodeId,
         toNodeId,
@@ -81,11 +81,12 @@ export default ({
           payload.fromNodeId,
           payload.toNodeId
         )
-        const dep = await firebase.database().ref(getters.user.id + '/templates/' + payload.templateId + '/dependencies').push(newDep)
+        const currentTemplateId = getters.currentTemplateId
+        const dep = await firebase.database().ref(getters.user.id + '/templates/' + currentTemplateId + '/dependencies').push(newDep)
         // Send mutation
         commit('newTempDep', {
           ...newDep,
-          templateId: payload.templateId,
+          // templateId: currentTemplateId,
           id: dep.key
         })
 
@@ -132,17 +133,18 @@ export default ({
         throw error
       }
     },
-    async loadTemplateDeps ({commit, getters}, {templateId}) {
+    async loadTemplateDeps ({commit, getters}) {
       commit('clearError')
       commit('setLoading', true)
       try {
+        const currentTemplateId = getters.currentTemplateId
         const depsResponse =
           await firebase.database()
-            .ref(getters.user.id + '/templates/' + templateId + '/dependencies')
+            .ref(getters.user.id + '/templates/' + currentTemplateId + '/dependencies')
             .once('value')
         const deps = depsResponse.val()
+        const depsArray = []
         if (deps != null) {
-          const depsArray = []
           Object.keys(deps).forEach(key => {
             const d = deps[key]
             depsArray.push(
@@ -153,14 +155,13 @@ export default ({
               )
             )
           })
-          // Send mutation
-          const payload = {
-            target: 'templateDeps',
-            deps: depsArray
-          }
-          commit('loadDeps', payload)
         }
-
+        // Send mutation
+        const payload = {
+          target: 'templateDeps',
+          deps: depsArray
+        }
+        commit('loadDeps', payload)
         commit('setLoading', false)
       } catch (error) {
         commit('setLoading', false)
@@ -185,11 +186,12 @@ export default ({
         throw error
       }
     },
-    async deleteTemplateDep ({commit, getters}, {id, templateId}) {
+    async deleteTemplateDep ({commit, getters}, id) {
       commit('clearError')
       commit('setLoading', true)
       try {
-        await firebase.database().ref(getters.user.id + '/templates/' + templateId + '/dependencies').child(id).remove()
+        const currentTemplateId = getters.currentTemplateId
+        await firebase.database().ref(getters.user.id + '/templates/' + currentTemplateId + '/dependencies').child(id).remove()
         const payload = {
           id,
           target: 'templateDeps'

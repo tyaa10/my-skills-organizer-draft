@@ -21,7 +21,7 @@
         li#deleteNodeContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkNode") Delete Node
         li#deleteDepContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkDep") Delete Dependency
     // Dialog Box - Delete or not delete the node
-    .ui-messageBox__wrapper
+    .ui-messageBox__wrapper#fabricCanvasModal
       .ui-messageBox.fadeInDown
         .ui-messageBox__header
           span.messageBox-title Delete the Node
@@ -378,7 +378,7 @@ export default {
           const fromNodeId = this.dependentNodeId
           const toNodeId = this.selectedNodeId
           // const selectedNodeStatus = this.selectedNode.status
-          // TODO Отправка в хранилище команды "Создать новую зависимость"
+          // Отправка в хранилище команды "Создать новую зависимость"
           this.$store.dispatch(this.actionNames.newDep, {
             fromNodeId: fromNodeId,
             toNodeId: toNodeId
@@ -393,7 +393,7 @@ export default {
               // Если ранее все зависимости узла были удовлетворены,
               // но статус выделенного узла (от которого будет зависимость) - не "Сделано"
               if (fromNode.dependenciesSatisfied && toNode.status !== '6') {
-                // TODO Изменяем в хранилище состояние модели на "не все зависимости удовлетворены"
+                // Изменяем в хранилище состояние модели на "не все зависимости удовлетворены"
                 this.$store.dispatch(this.actionNames.editNode, {
                   id: fromNodeId,
                   changes: {
@@ -429,7 +429,7 @@ export default {
     },
     onContextMenuClick (id) {
       if (id === 'deleteNodeContextMenuItem') {
-        this.nodeDeleteDialogHandler = uiMessage(this.nodeDeleteDialogItOk, this.nodeDeleteDialogItCancel)
+        this.nodeDeleteDialogHandler = uiMessage(this.nodeDeleteDialogItOk, this.nodeDeleteDialogItCancel, 'fabricCanvasModal')
         this.nodeDeleteDialogHandler.call()
       } else if (id === 'addDependencyContextMenuItem') {
         // Выбран пункт контекстного меню области рисования "Добавить зависимость"
@@ -451,7 +451,7 @@ export default {
         showSidebar()
         this.formMode = 'edit'
       } else if (id === 'deleteDepContextMenuItem') {
-        this.depDeleteDialogHandler = uiMessage(this.depDeleteDialogItOk, this.depDeleteDialogItCancel)
+        this.depDeleteDialogHandler = uiMessage(this.depDeleteDialogItOk, this.depDeleteDialogItCancel, 'fabricCanvasModal')
         this.depDeleteDialogHandler.call()
       }
     },

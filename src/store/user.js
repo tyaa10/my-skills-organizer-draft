@@ -13,6 +13,7 @@ export default {
   },
   actions: {
     // Login page
+    // Сейчас не используется, так как аутентификация только при помощи службы Гугл
     async loginUser ({commit}, {email, password}) {
       commit('clearError')
       commit('setLoading', true)

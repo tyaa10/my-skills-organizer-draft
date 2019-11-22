@@ -152,11 +152,11 @@ export default ({
           payload.top// ,
           // getters.user.id
         )
-        const node = await firebase.database().ref(getters.user.id + '/templates/' + payload.templateId + '/nodes').push(newNode)
+        const node = await firebase.database().ref(getters.user.id + '/templates/' + getters.currentTemplateId + '/nodes').push(newNode)
         // Send mutation
         commit('newTemplateNode', {
           ...newNode,
-          templateId: payload.templateId,
+          // templateId: payload.templateId,
           id: node.key
         })
 
@@ -218,26 +218,25 @@ export default ({
         throw error
       }
     },
-    async loadTemplateNodes ({commit, getters}, {templateId}) {
+    async loadTemplateNodes ({commit, getters}) {
       commit('clearError')
       commit('setLoading', true)
       try {
+        const currentTemplateId = getters.currentTemplateId
         const nodesResponse =
           await firebase.database()
-            .ref(getters.user.id + '/templates/' + templateId + '/nodes')
+            .ref(getters.user.id + '/templates/' + currentTemplateId + '/nodes')
             // .orderByChild('user')
             // .equalTo(getters.user.id)
             .once('value')
         // Get value
         const nodes = nodesResponse.val()
-        // console.log(nodes)
+        // New array
+        const nodesArray = []
         if (nodes != null) {
-          // New array
-          const nodesArray = []
           // Get task key (id)
           Object.keys(nodes).forEach(key => {
             const n = nodes[key]
-            // console.log(n)
             nodesArray.push(
               new Node(
                 n.title,
@@ -254,15 +253,13 @@ export default ({
               )
             )
           })
-          const payload = {
-            target: 'templateElems',
-            nodes: nodesArray,
-            templateId
-          }
-          // Send mutation
-          commit('loadNodes', payload)
         }
-
+        const payload = {
+          target: 'templateElems',
+          nodes: nodesArray
+        }
+        // Send mutation
+        commit('loadNodes', payload)
         commit('setLoading', false)
       } catch (error) {
         commit('setLoading', false)
@@ -288,12 +285,13 @@ export default ({
         throw error
       }
     },
-    async editTemplateNode ({commit, getters}, {id, templateId, changes}) {
+    async editTemplateNode ({commit, getters}, {id, changes}) {
       commit('clearError')
       commit('setLoading', true)
       try {
         // Update data fields
-        await firebase.database().ref(getters.user.id + '/templates/' + templateId + '/nodes').child(id).update({
+        const currentTemplateId = getters.currentTemplateId
+        await firebase.database().ref(getters.user.id + '/templates/' + currentTemplateId + '/nodes').child(id).update({
           ...changes
         })
         // Send mutation
@@ -319,11 +317,12 @@ export default ({
         throw error
       }
     },
-    async deleteTemplateNode ({commit, getters}, {id, templateId}) {
+    async deleteTemplateNode ({commit, getters}, id) {
       commit('clearError')
       commit('setLoading', true)
       try {
-        await firebase.database().ref(getters.user.id + '/templates/' + templateId + '/nodes').child(id).remove()
+        const currentTemplateId = getters.currentTemplateId
+        await firebase.database().ref(getters.user.id + '/templates/' + currentTemplateId + '/nodes').child(id).remove()
         commit('deleteNode', {id, target: 'templateElems'})
         commit('setLoading', false)
       } catch (error) {

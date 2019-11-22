@@ -139,7 +139,7 @@ function showMessage (message, messageBtn) { // eslint-disable-line no-unused-va
 //
 // Message Dialog
 //
-function uiMessage (okButtonHandler, cancelButtonHandler) { // eslint-disable-line no-unused-vars
+function uiMessage (okButtonHandler, cancelButtonHandler, modalName) { // eslint-disable-line no-unused-vars
   var dialogButtonsHandlers = {}
   // [i] for forEach
   dialogButtonsHandlers['ok'] = okButtonHandler
@@ -151,6 +151,7 @@ function uiMessage (okButtonHandler, cancelButtonHandler) { // eslint-disable-li
   var uiMessageDialogBtnClose = document.getElementsByClassName('ui-messageBox-close')
   // Event for Show
   Array.prototype.forEach.call(uiMessageDialogBtnShow, function (element, i) {
+    console.log('Array.prototype.forEach.call(uiMessageDialogBtnShow i = ' + i)
     var newElement = element.cloneNode(true)
     element.parentNode.replaceChild(newElement, element)
     newElement.addEventListener('click', function () {
@@ -204,9 +205,12 @@ function uiMessage (okButtonHandler, cancelButtonHandler) { // eslint-disable-li
     })
   })
 
-  function showMessageDialog (i) {
+  // function showMessageDialog (i) {
+  function showMessageDialog (modalName) {
     // Becouse [i]
-    var messageDialog = document.getElementsByClassName('ui-messageBox__wrapper')[i]
+    console.log('showMessageDialog modalName = ' + modalName)
+    // var messageDialog = document.getElementsByClassName('ui-messageBox__wrapper')[i]
+    var messageDialog = document.querySelectorAll('.ui-messageBox__wrapper#' + modalName)[0]
     messageDialog.style.display = 'flex'
   }
 
@@ -217,7 +221,8 @@ function uiMessage (okButtonHandler, cancelButtonHandler) { // eslint-disable-li
   }
 
   return function () {
-    showMessageDialog(0)
+    // showMessageDialog(0)
+    showMessageDialog(modalName)
   }
 }
 // Экспорт всех необходимых функций из модуля

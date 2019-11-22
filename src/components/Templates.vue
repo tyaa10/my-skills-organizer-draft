@@ -1,16 +1,20 @@
 <template lang="pug">
-.wrapper
+.content-wrapper
   // В верхней части разметки располагаем представления для всплывающих
   // сообщений из библиотеки uimini
   #cancelledMessage.ui-message.ui-message--danger
     span.message-title Cancelled
   #doneMessage.ui-message.ui-message--success
     span.message-title Done
-  section
+  // section
     .container
       h1.ui-title-1 Templates
     .container
       Experimental(:elems-getter="elemsGetter", :deps-getter="depsGetter", :action-names="actionNames")
+  // Секция, содержащая экземпляр пользовательского компонента FabricCanvas
+  // для отображения дерева целей и задач текущего шаблона
+  section#c(ref='canvasContainer')
+    FabricCanvas(:elems-getter="elemsGetter", :deps-getter="depsGetter", :action-names="actionNames")
   .right-sidebar.full
     .button.button-default.right-sidebar-toggle-button#templatesSidebarOpenButton(@click='toggleTemplatesSidebar')
       span(v-if="!templatesSidebarShown") &lt;
@@ -27,21 +31,21 @@
             .sidebar-item.templates-item(
               v-for="temp in temps"
               :key="temp.id"
-              :class="{ public: temp.access, selected: (selectedTempId === temp.id) }"
+              :class="{ public: temp.access, selected: (currentTemplateId === temp.id) }"
               v-on:click="templatesItemClick(temp.id)"
             )
               p.ui-text-regular {{ temp.title }}
   // Dialog Box - Create a new template
-  .ui-messageBox__wrapper
+  .ui-messageBox__wrapper#templatesModal
     .ui-messageBox.fadeInDown
       .ui-messageBox__header
-        span.messageBox-title {{formStaticContent[formMode].title}}
+        span.messageBox-title {{formStaticContent[tempFormMode].title}}
         span.button-close.ui-messageBox-close
       .ui-messageBox__content
-        span {{formStaticContent[formMode].description}}
+        span {{formStaticContent[tempFormMode].description}}
         // Форма создания / редактирования узла.
         // Подавление стандартной отправки пост-запроса формой
-        form(v-if="formMode == 'create' || formMode == 'edit'" v-on:submit.prevent='')
+        form(v-if="tempFormMode == 'create' || tempFormMode == 'edit'" v-on:submit.prevent='')
           // Привязка блока с полем ввода к свойству модели
           // с указанием текстов ошибок валидации
           .form-item(:class="{ 'form-group--error': $v.selectedTemplate.title.$error }")
@@ -74,10 +78,12 @@
 <script>
 import { showRightSidebar, hideRightSidebar, uiMessage, showMessage } from '@/assets/js/uimini.js'
 import { required, minLength, maxLength } from 'vuelidate/lib/validators'
-import Experimental from '@/components/Experimental.vue'
+// import Experimental from '@/components/Experimental.vue'
+import FabricCanvas from '@/components/FabricCanvas.vue'
 export default {
   components: {
-    Experimental
+    // Experimental
+    FabricCanvas
   },
   data () {
     return {
@@ -96,11 +102,11 @@ export default {
         access: false
       },
       templatesSidebarShown: true,
-      selectedTempId: null,
+      // selectedTempId: null,
       tempCreateDialogHandler: null,
       tempEditDialogHandler: null,
       tempDeleteDialogHandler: null,
-      formMode: 'create',
+      tempFormMode: 'create',
       formStaticContent: {
         create: {
           title: 'Create',
@@ -116,18 +122,6 @@ export default {
         }
       }
     }
-    /* return {
-      elemsGetter: 'elems',
-      depsGetter: 'deps',
-      actionNames: {
-        newNode: 'newNode',
-        editNode: 'editNode',
-        deleteNode: 'deleteNode',
-        newDep: 'newDep',
-        deleteDep: 'deleteDep'
-      }
-    } */
-    // TODO Получить из хранилища объект пользователя и получить его шаблоны, состоящие из узлов и зависимостей
   },
   // Правила валидации
   validations: {
@@ -149,9 +143,12 @@ export default {
       // источник данных о шаблонах
       return this.$store.getters.temps
     },
+    currentTemplateId () {
+      return this.$store.getters.currentTemplateId
+    },
     checkTemplate () {
       // Проверка: есть ли выделенный шаблон в списке
-      return this.selectedTempId !== null
+      return this.currentTemplateId !== null
     }
   },
   /* watch: {
@@ -175,19 +172,20 @@ export default {
     addTempClick () {
       // Вызов очистки формы редактирования данных узла
       this.resetTempForm()
-      this.formMode = 'create'
-      this.tempCreateDialogHandler = uiMessage(this.tempCreateDialogItOk, this.tempCreateDialogItCancel)
+      // this.tempFormMode = 'create'
+      this.tempCreateDialogHandler = uiMessage(this.tempCreateDialogItOk, this.tempCreateDialogItCancel, 'templatesModal')
       this.tempCreateDialogHandler.call()
+      // console.log('this.tempFormMode = ' + this.tempFormMode)
     },
     editTempClick () {
+      this.tempFormMode = 'edit'
       this.setTempForm()
-      this.formMode = 'edit'
-      this.tempEditDialogHandler = uiMessage(this.tempEditDialogItOk, this.tempEditDialogItCancel)
+      this.tempEditDialogHandler = uiMessage(this.tempEditDialogItOk, this.tempEditDialogItCancel, 'templatesModal')
       this.tempEditDialogHandler.call()
     },
     delTempClick () {
-      this.formMode = 'delete'
-      this.tempDeleteDialogHandler = uiMessage(this.tempDeleteDialogItOk, this.tempDeleteDialogItCancel)
+      this.tempFormMode = 'delete'
+      this.tempDeleteDialogHandler = uiMessage(this.tempDeleteDialogItOk, this.tempDeleteDialogItCancel, 'templatesModal')
       this.tempDeleteDialogHandler.call()
     },
     importTempClick () {
@@ -198,29 +196,35 @@ export default {
     },
     tempCreateDialogItOk () {
       // Вызываем в хранилище действие создания шаблона
-      console.log('tempCreateDialogItOk')
-      this.$store.dispatch('newTemplate', {
+      const store = this.$store
+      store.dispatch('newTemplate', {
         title: this.selectedTemplate.title,
         description: this.selectedTemplate.description,
         access: this.selectedTemplate.access
       })
         .then(() => {
-          this.tempCreateDialogHandler = null
-          showMessage('#doneMessage')
+          store.dispatch('loadTemplateNodes')
+            .then(() => {
+              store.dispatch('loadTemplateDeps')
+            })
+            .then(() => {
+              this.tempCreateDialogHandler = null
+              this.toggleTemplatesSidebar()
+              showMessage('#doneMessage')
+            })
         })
     },
     tempCreateDialogItCancel () {
       // Вызываем в хранилище действие удаления выделенного узла
-      console.log('tempCreateDialogItCancel')
+      // console.log('tempCreateDialogItCancel')
       this.tempCreateDialogHandler = null
       showMessage('#cancelledMessage')
     },
     tempEditDialogItOk () {
       // Вызываем в хранилище действие создания шаблона
-      // TODO Отправлять для обновления только изменившиеся значения
-      console.log('tempEditDialogItOk')
+      // Отправлять для обновления только изменившиеся значения
+      // console.log('tempEditDialogItOk')
       this.$store.dispatch('editTemplate', {
-        id: this.selectedTempId,
         changes: {
           title: this.selectedTemplate.title,
           description: this.selectedTemplate.description,
@@ -242,7 +246,7 @@ export default {
       // Вызываем в хранилище действие создания шаблона
       console.log('tempDeleteDialogItOk')
       // Вызываем в хранилище действие удаления выделенного узла
-      this.$store.dispatch('deleteTemplate', this.selectedTempId)
+      this.$store.dispatch('deleteTemplate')
         .then(() => {
           this.tempDeleteDialogHandler = null
           showMessage('#doneMessage')
@@ -261,17 +265,25 @@ export default {
         description: '',
         access: false
       }
-      this.tempFormMode = ''
+      this.tempFormMode = 'create'
     },
     // Метод установки выбранного шаблона
     // для дальнейшего редактирования в форме
     setTempForm () {
       if (this.checkTemplate) {
-        this.selectedTemplate = this.temps.find(temp => temp.id === this.selectedTempId)
+        this.selectedTemplate = this.temps.find(temp => temp.id === this.currentTemplateId)
       }
     },
     templatesItemClick (id) {
-      this.selectedTempId = id
+      // this.selectedTempId = id
+      const store = this.$store
+      store.dispatch('setCurrentTemplateId', id)
+        .then(() => {
+          store.dispatch('loadTemplateNodes')
+            .then(() => {
+              store.dispatch('loadTemplateDeps')
+            })
+        })
     }
   }
 }
