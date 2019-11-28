@@ -6,6 +6,8 @@
     span.message-title Cancelled
   #doneMessage.ui-message.ui-message--success
     span.message-title Done
+  #errorMessage.ui-message.ui-message--danger
+    span.message-title Error
   // section
     .container
       h1.ui-title-1 Templates
@@ -106,6 +108,7 @@ export default {
       tempCreateDialogHandler: null,
       tempEditDialogHandler: null,
       tempDeleteDialogHandler: null,
+      tempUseDialogHandler: null,
       tempFormMode: 'create',
       formStaticContent: {
         create: {
@@ -119,8 +122,15 @@ export default {
         delete: {
           title: 'Delete',
           description: 'Delete Selected Template'
+        },
+        use: {
+          title: 'Use',
+          description: 'Add a copy of the selected template to the main skill tree?'
         }
-      }
+      },
+      submitStatus: '',
+      treeCopyingCompleted: false,
+      templateNodesDictionary: null
     }
   },
   // Правила валидации
@@ -151,14 +161,19 @@ export default {
       return this.currentTemplateId !== null
     }
   },
-  /* watch: {
-    // Если изменился список
+  watch: {
+    /* // Если изменился список
     temps (newVal, oldVal) {
       newVal.forEach(t => {
         console.log(t)
       })
+    } */
+    treeCopyingCompleted (newVal, oldVal) {
+      if (newVal === true) {
+        this.copyDeps()
+      }
     }
-  }, */
+  },
   methods: {
     toggleTemplatesSidebar () {
       if (this.templatesSidebarShown) {
@@ -193,6 +208,9 @@ export default {
     },
     useTempClick () {
       console.log('useTempClick')
+      this.tempFormMode = 'use'
+      this.tempUseDialogHandler = uiMessage(this.tempUseDialogItOk, this.tempUseDialogItCancel, 'templatesModal')
+      this.tempUseDialogHandler.call()
     },
     tempCreateDialogItOk () {
       // Вызываем в хранилище действие создания шаблона
@@ -258,6 +276,72 @@ export default {
       this.tempDeleteDialogHandler = null
       showMessage('#cancelledMessage')
     },
+    tempUseDialogItOk () {
+      // Copy Nodes
+      console.log('tempUseDialogItOk')
+      let maxNodeTop = this.$store.getters.elems[0].top
+      this.$store.getters.elems.forEach(n => {
+        if (n.top > maxNodeTop) {
+          maxNodeTop = n.top
+        }
+      })
+      // console.log(maxNodeTop)
+      let minTempNodeTop = this.$store.getters.templateElems[0].top
+      let minTempNodeLeft = this.$store.getters.templateElems[0].left
+      this.$store.getters.templateElems.forEach(n => {
+        if (n.top < minTempNodeTop) {
+          minTempNodeTop = n.top
+        }
+        if (n.left < minTempNodeLeft) {
+          minTempNodeLeft = n.left
+        }
+      })
+      // console.log(minTempNodeTop, minTempNodeLeft)
+      /* const nodesArray = []
+      this.$store.getters.templateElems.forEach(n => {
+        n.top = n.top - minTempNodeTop + maxNodeTop
+        n.left = n.left - minTempNodeLeft
+        nodesArray.push(n)
+      }) */
+      this.templateNodesDictionary = []
+      let treeCopyingCount = 0
+      this.$store.getters.templateElems.forEach(n => {
+        // console.log(n)
+        this.$store.dispatch('newNode', {
+          title: n.title,
+          type: n.type,
+          description: n.description,
+          access: n.access,
+          status: n.status,
+          dependenciesSatisfied: n.dependenciesSatisfied,
+          radius: n.radius,
+          left: n.left - minTempNodeLeft + 100,
+          top: n.top - minTempNodeTop + maxNodeTop + 50
+        })
+          .then(() => {
+            this.submitStatus = 'OK'
+            // console.log(n.id, this.$store.getters.lastCreatedElemId)
+            this.templateNodesDictionary[n.id] = this.$store.getters.lastCreatedElemId
+            treeCopyingCount++
+            if (treeCopyingCount === this.$store.getters.templateElems.length) {
+              // console.log(this.$store.getters.templateElems.length)
+              this.treeCopyingCompleted = true
+            }
+          })
+          .catch(err => {
+            this.submitStatus = err.message
+            showMessage('#errorMessage')
+          })
+      })
+      // Copy Dependencies
+      // const depsArray = []
+    },
+    tempUseDialogItCancel () {
+      // Вызываем в хранилище действие удаления выделенного узла
+      console.log('tempUseDialogItCancel')
+      /* this.tempDeleteDialogHandler = null
+      showMessage('#cancelledMessage') */
+    },
     // Метод сброса состояния формы создания/редактирования узла
     resetTempForm () {
       this.selectedTemplate = {
@@ -284,6 +368,30 @@ export default {
               store.dispatch('loadTemplateDeps')
             })
         })
+    },
+    copyDeps () {
+      this.$store.getters.templateDeps.forEach((d, i, array) => {
+        // depsArray.push(d)
+        // Отправка в хранилище команды "Создать новую зависимость"
+        console.log(d, d.fromNodeId, this.templateNodesDictionary[d.fromNodeId])
+        this.$store.dispatch('newDep', {
+          fromNodeId: this.templateNodesDictionary[d.fromNodeId],
+          toNodeId: this.templateNodesDictionary[d.toNodeId]
+        })
+          .then(() => {
+            // Если удалось - устанавливается флаг успешно завершенной операции
+            this.submitStatus = 'OK'
+            if (i === array.length - 1) {
+              this.templateNodesDictionary = null
+              this.treeCopyingCompleted = false
+              showMessage('#doneMessage')
+            }
+          })
+          .catch(err => {
+            this.submitStatus = err.message
+            showMessage('#errorMessage')
+          })
+      })
     }
   }
 }

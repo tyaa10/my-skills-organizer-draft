@@ -196,6 +196,9 @@ export default {
   watch: {
     // Если изменился список узлов или связей - обновляем область рисования
     elems (newVal, oldVal) {
+      console.log('elems')
+      this.canvas.setHeight(this.recomputeCanvasHeight())
+      this.canvas.renderAll()
       this.fabricDraw(this.elems, this.deps)
     },
     deps (newVal, oldVal) {
@@ -203,10 +206,11 @@ export default {
     }
   },
   mounted () {
+    let canvasHeight = this.recomputeCanvasHeight()
     // Создание объекта рисования по ссылке на элемент canvas в разметке
     this.canvas = new fabric.Canvas(this.$refs.canvas, {
       width: this.width,
-      height: this.height,
+      height: canvasHeight,
       selectionColor: '#90ccb7',
       backgroundColor: '#fff',
       selection: false
@@ -308,7 +312,7 @@ export default {
         const id = modifiedObject.get('id')
         const newLeft = modifiedObject.get('left')
         const newTop = modifiedObject.get('top')
-        // TODO сохраняем новые координаты узла после окончания его перетаскивания
+        // сохраняем новые координаты узла после окончания его перетаскивания
         this.$store.dispatch(this.actionNames.editNode, {
           id: id,
           changes: {
@@ -317,6 +321,8 @@ export default {
           }
         })
           .then(() => {
+            this.canvas.setHeight(this.recomputeCanvasHeight())
+            // this.canvas.renderAll()
             this.submitStatus = 'OK'
           })
           .catch(err => {
@@ -498,7 +504,6 @@ export default {
     // Обработчик клика по кнопке "Сделано" в форме создания/редактирования узла
     applyNodeDataClick () {
       if (this.formMode === 'create') {
-        // TODO
         this.$store.dispatch(this.actionNames.newNode, {
           title: this.selectedNode.title,
           type: this.selectedNode.type,
@@ -795,6 +800,23 @@ export default {
             })
         }
       }
+    },
+    recomputeCanvasHeight () {
+      let canvasHeight = this.height
+      if (this.elems[0]) {
+        let maxNodeTop = this.elems[0].top
+        this.elems.forEach(n => {
+          if (n.top > maxNodeTop) {
+            maxNodeTop = n.top
+          }
+        })
+        console.log('maxNodeTop', maxNodeTop)
+        console.log('this.height', this.$parent.$el.clientHeight)
+        if (maxNodeTop + 100 > canvasHeight) {
+          canvasHeight = maxNodeTop + 100
+        }
+      }
+      return canvasHeight
     }
   }
 }

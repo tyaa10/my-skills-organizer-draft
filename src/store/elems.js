@@ -7,7 +7,9 @@ export default ({
     // Локальный массив элементов для отображения (моделей узлов целей)
     elems: [],
     // ... для узлов шаблона, выбранного в разделе "Шаблоны"
-    templateElems: []
+    templateElems: [],
+    // Последний созданный элемент (узел)
+    lastCreatedElemId: null
   },
   mutations: {
     newNode (
@@ -37,6 +39,8 @@ export default ({
         top,
         left
       })
+      state.lastCreatedElemId = id
+      console.log('state.lastCreatedElemId', state.lastCreatedElemId)
     },
     newTemplateNode (
       state,
@@ -338,6 +342,9 @@ export default ({
     },
     templateElems (state) {
       return state.templateElems
+    },
+    lastCreatedElemId (state) {
+      return state.lastCreatedElemId
     }
   }
 })
