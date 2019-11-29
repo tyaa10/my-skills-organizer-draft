@@ -15,6 +15,10 @@
       Experimental(:elems-getter="elemsGetter", :deps-getter="depsGetter", :action-names="actionNames")
   // Секция, содержащая экземпляр пользовательского компонента FabricCanvas
   // для отображения дерева целей и задач текущего шаблона
+  .templateData
+    span Template: "{{selectedTemplate.title}}".
+    = ' '
+    span Accessible by id: {{currentUserId}}@{{currentTemplateId}}
   section#c(ref='canvasContainer')
     FabricCanvas(:elems-getter="elemsGetter", :deps-getter="depsGetter", :action-names="actionNames")
   .right-sidebar.full
@@ -153,13 +157,19 @@ export default {
       // источник данных о шаблонах
       return this.$store.getters.temps
     },
+    currentUserId () {
+      return this.$store.getters.user.id
+    },
     currentTemplateId () {
       return this.$store.getters.currentTemplateId
     },
     checkTemplate () {
       // Проверка: есть ли выделенный шаблон в списке
       return this.currentTemplateId !== null
-    }
+    }/* ,
+    selectedTemplateComputed () {
+      return this.selectedTemplate
+    } */
   },
   watch: {
     /* // Если изменился список
@@ -172,7 +182,12 @@ export default {
       if (newVal === true) {
         this.copyDeps()
       }
-    }
+    }/* ,
+    selectedTemplate (newVal, oldVal) {
+      if (newVal === true) {
+        this.selectedTemplate
+      }
+    } */
   },
   methods: {
     toggleTemplatesSidebar () {
@@ -194,7 +209,6 @@ export default {
     },
     editTempClick () {
       this.tempFormMode = 'edit'
-      this.setTempForm()
       this.tempEditDialogHandler = uiMessage(this.tempEditDialogItOk, this.tempEditDialogItCancel, 'templatesModal')
       this.tempEditDialogHandler.call()
     },
@@ -363,6 +377,7 @@ export default {
       const store = this.$store
       store.dispatch('setCurrentTemplateId', id)
         .then(() => {
+          this.setTempForm()
           store.dispatch('loadTemplateNodes')
             .then(() => {
               store.dispatch('loadTemplateDeps')
