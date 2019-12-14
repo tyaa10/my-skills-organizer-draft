@@ -29,9 +29,6 @@ export default ({
     },
     loadTemplates (state, payload) {
       state.temps = payload
-      /* state.temps.forEach(t => {
-        console.log(t)
-      }) */
     },
     editTemplate (state, payload) {
       const oldTemp = state.temps.find(temp => temp.id === payload.id)
@@ -46,6 +43,7 @@ export default ({
     deleteTemplate (state, payload) {
       const deletedTemplate = state.temps.find(temp => temp.id === payload.id)
       state.temps.splice(state.temps.indexOf(deletedTemplate), 1)
+      state.currentTemplateId = null
     }
   },
   actions: {
@@ -139,6 +137,10 @@ export default ({
         const id = getters.currentTemplateId
         await firebase.database().ref(getters.user.id + '/templates').child(id).remove()
         commit('deleteTemplate', {id})
+        /* dispatch('loadTemplates', getters.user)
+          .then(() => {
+            commit('setLoading', false)
+          }) */
         commit('setLoading', false)
       } catch (error) {
         commit('setLoading', false)
@@ -152,6 +154,74 @@ export default ({
       try {
         // await firebase.database().ref(getters.user.id + '/nodes').child(id).remove()
         commit('setCurrentTemplateId', id)
+        commit('setLoading', false)
+      } catch (error) {
+        commit('setLoading', false)
+        commit('setError', error.message)
+        throw error
+      }
+    },
+    // Импорт шаблона из другого аккаунта
+    async importTemplate ({commit, dispatch, getters}, {importUserId, importTemplateId}) {
+      commit('clearError')
+      commit('setLoading', true)
+      try {
+        const templateResponse =
+          await firebase.database()
+            .ref(importUserId + '/templates/' + importTemplateId)
+            .once('value')
+        // Get value
+        const template = templateResponse.val()
+        // console.log(Templates)
+        if (template != null) {
+          // console.log(template)
+          dispatch('newTemplate', {
+            title: template.title,
+            description: template.description,
+            access: template.access
+          }).then(() => {
+            if (template.nodes != null) {
+              const templateNodesDictionary = []
+              let treeCopyingCount = 0
+              const templateNodesCount = Object.keys(template.nodes).length
+              // console.log('template.nodes', template.nodes)
+              Object.keys(template.nodes).forEach(key => {
+                const node = template.nodes[key]
+                dispatch('newTemplateNode', {
+                  title: node.title,
+                  type: node.type,
+                  description: node.description,
+                  access: node.access,
+                  status: node.status,
+                  dependenciesSatisfied: true,
+                  radius: node.radius,
+                  left: node.left,
+                  top: node.top
+                })
+                  .then(() => {
+                    templateNodesDictionary[key] = getters.lastCreatedTemplateElemId
+                    console.log('lastCreatedTemplateElemId', getters.lastCreatedTemplateElemId)
+                    treeCopyingCount++
+                    if (treeCopyingCount === templateNodesCount) {
+                      if (template.dependencies != null) {
+                        Object.values(template.dependencies).forEach(dep => {
+                          console.log('f', dep.fromNodeId, templateNodesDictionary[dep.fromNodeId])
+                          console.log('t', dep.toNodeId, templateNodesDictionary[dep.toNodeId])
+                          dispatch('newTemplateDep', {
+                            fromNodeId: templateNodesDictionary[dep.fromNodeId],
+                            toNodeId: templateNodesDictionary[dep.toNodeId]
+                          })
+                        })
+                      }
+                    }
+                  })
+              })
+            }
+          })
+          // Send mutation
+          // commit('loadTemplates', templatesArray)
+        }
+
         commit('setLoading', false)
       } catch (error) {
         commit('setLoading', false)

@@ -8,19 +8,18 @@
     span.message-title Done
   #errorMessage.ui-message.ui-message--danger
     span.message-title Error
-  // section
-    .container
-      h1.ui-title-1 Templates
-    .container
-      Experimental(:elems-getter="elemsGetter", :deps-getter="depsGetter", :action-names="actionNames")
   // Секция, содержащая экземпляр пользовательского компонента FabricCanvas
   // для отображения дерева целей и задач текущего шаблона
-  .templateData
-    span Template: "{{selectedTemplate.title}}".
+  .templateData(v-if="currentUserId && currentTemplateId")
+    span.ui-title-4 Template:
     = ' '
-    span Accessible by id: {{currentUserId}}@{{currentTemplateId}}
+    span.ui-text-regular "{{selectedTemplate.title}}".
+    = ' '
+    span.ui-title-4 Accessible by id:
+    = ' '
+    span.ui-text-regular {{currentUserId}}@{{currentTemplateId}}
   section#c(ref='canvasContainer')
-    FabricCanvas(:elems-getter="elemsGetter", :deps-getter="depsGetter", :action-names="actionNames")
+    FabricCanvas(:elems-getter="elemsGetter", :deps-getter="depsGetter", :action-names="actionNames", ref="fabricCanvasHandler")
   .right-sidebar.full
     .button.button-default.right-sidebar-toggle-button#templatesSidebarOpenButton(@click='toggleTemplatesSidebar')
       span(v-if="!templatesSidebarShown") &lt;
@@ -41,7 +40,7 @@
               v-on:click="templatesItemClick(temp.id)"
             )
               p.ui-text-regular {{ temp.title }}
-  // Dialog Box - Create a new template
+  // Dialog Box - Template
   .ui-messageBox__wrapper#templatesModal
     .ui-messageBox.fadeInDown
       .ui-messageBox__header
@@ -77,6 +76,16 @@
                     // о потенциальных клиентах
                     input#accessCheckbox.ui-checkbox(type='checkbox' v-model='selectedTemplate.access')
                     label.label--inline(for='accessCheckbox') Public
+        // Форма импорта шаблона по его глобальному ИД
+        // Подавление стандартной отправки пост-запроса формой
+        form(v-if="tempFormMode == 'import'" v-on:submit.prevent='')
+          // Привязка блока с полем ввода к свойству модели
+          // с указанием текстов ошибок валидации
+          .form-item(:class="{ 'form-group--error': $v.importTemplate.id.$error }")
+            label.form__label(for='importTemplateIdInput') Id:
+            // Поле ввода глобального ИД импортируемого шаблона
+            input.form__input#importTemplateIdInput(type='text' placeholder='Import Template Id' v-model.trim="$v.importTemplate.id.$model")
+          .error(v-if="!$v.importTemplate.id.required") Field is required
       .ui-messageBox__footer
         .button.button-light.ui-messageBox-cancel Cancel
         .button.button-primary.ui-messageBox-ok OK
@@ -108,11 +117,11 @@ export default {
         access: false
       },
       templatesSidebarShown: true,
-      // selectedTempId: null,
       tempCreateDialogHandler: null,
       tempEditDialogHandler: null,
       tempDeleteDialogHandler: null,
       tempUseDialogHandler: null,
+      tempImportDialogHandler: null,
       tempFormMode: 'create',
       formStaticContent: {
         create: {
@@ -130,11 +139,18 @@ export default {
         use: {
           title: 'Use',
           description: 'Add a copy of the selected template to the main skill tree?'
+        },
+        import: {
+          title: 'Import',
+          description: 'Import template by global id'
         }
       },
       submitStatus: '',
       treeCopyingCompleted: false,
-      templateNodesDictionary: null
+      templateNodesDictionary: null,
+      importTemplate: {
+        id: null
+      }
     }
   },
   // Правила валидации
@@ -149,6 +165,11 @@ export default {
         required,
         minLength: minLength(8),
         maxLength: maxLength(500)
+      }
+    },
+    importTemplate: {
+      id: {
+        required
       }
     }
   },
@@ -166,28 +187,14 @@ export default {
     checkTemplate () {
       // Проверка: есть ли выделенный шаблон в списке
       return this.currentTemplateId !== null
-    }/* ,
-    selectedTemplateComputed () {
-      return this.selectedTemplate
-    } */
+    }
   },
   watch: {
-    /* // Если изменился список
-    temps (newVal, oldVal) {
-      newVal.forEach(t => {
-        console.log(t)
-      })
-    } */
     treeCopyingCompleted (newVal, oldVal) {
       if (newVal === true) {
         this.copyDeps()
       }
-    }/* ,
-    selectedTemplate (newVal, oldVal) {
-      if (newVal === true) {
-        this.selectedTemplate
-      }
-    } */
+    }
   },
   methods: {
     toggleTemplatesSidebar () {
@@ -219,9 +226,12 @@ export default {
     },
     importTempClick () {
       console.log('importTempClick')
+      this.tempFormMode = 'import'
+      this.tempImportDialogHandler = uiMessage(this.tempImportDialogItOk, this.tempImportDialogItCancel, 'templatesModal')
+      this.tempImportDialogHandler.call()
     },
     useTempClick () {
-      console.log('useTempClick')
+      // console.log('useTempClick')
       this.tempFormMode = 'use'
       this.tempUseDialogHandler = uiMessage(this.tempUseDialogItOk, this.tempUseDialogItCancel, 'templatesModal')
       this.tempUseDialogHandler.call()
@@ -269,30 +279,30 @@ export default {
         })
     },
     tempEditDialogItCancel () {
-      // Вызываем в хранилище действие удаления выделенного узла
-      console.log('tempEditDialogItCancel')
+      // Вызываем в хранилище действие изменения выделенного Template
       this.tempEditDialogHandler = null
       showMessage('#cancelledMessage')
     },
     tempDeleteDialogItOk () {
-      // Вызываем в хранилище действие создания шаблона
-      console.log('tempDeleteDialogItOk')
-      // Вызываем в хранилище действие удаления выделенного узла
+      // Вызываем в хранилище действие удаления выделенного Template
       this.$store.dispatch('deleteTemplate')
         .then(() => {
           this.tempDeleteDialogHandler = null
+          this.$store.dispatch('loadTemplateNodes')
+            .then(() => {
+              this.$store.dispatch('loadTemplateDeps')
+            })
+          // this.$refs.fabricCanvasHandler.fabricReDraw()
           showMessage('#doneMessage')
         })
     },
     tempDeleteDialogItCancel () {
-      // Вызываем в хранилище действие удаления выделенного узла
-      console.log('tempDeleteDialogItCancel')
+      // Отменяем действие удаления выделенного Template
       this.tempDeleteDialogHandler = null
       showMessage('#cancelledMessage')
     },
     tempUseDialogItOk () {
       // Copy Nodes
-      console.log('tempUseDialogItOk')
       let maxNodeTop = this.$store.getters.elems[0].top
       this.$store.getters.elems.forEach(n => {
         if (n.top > maxNodeTop) {
@@ -310,17 +320,9 @@ export default {
           minTempNodeLeft = n.left
         }
       })
-      // console.log(minTempNodeTop, minTempNodeLeft)
-      /* const nodesArray = []
-      this.$store.getters.templateElems.forEach(n => {
-        n.top = n.top - minTempNodeTop + maxNodeTop
-        n.left = n.left - minTempNodeLeft
-        nodesArray.push(n)
-      }) */
       this.templateNodesDictionary = []
       let treeCopyingCount = 0
       this.$store.getters.templateElems.forEach(n => {
-        // console.log(n)
         this.$store.dispatch('newNode', {
           title: n.title,
           type: n.type,
@@ -353,8 +355,37 @@ export default {
     tempUseDialogItCancel () {
       // Вызываем в хранилище действие удаления выделенного узла
       console.log('tempUseDialogItCancel')
-      /* this.tempDeleteDialogHandler = null
-      showMessage('#cancelledMessage') */
+    },
+    // Import OK
+    tempImportDialogItOk () {
+      // this.$refs.fabricCanvasHandler.fabricClearCanvas()
+      const [importUserId, importTemplateId] = this.importTemplate.id.split('@')
+      const store = this.$store
+      store.dispatch('setCurrentTemplateId', null)
+        .then(() => {
+          store.dispatch('loadTemplateNodes')
+            .then(() => {
+              store.dispatch('loadTemplateDeps')
+            })
+        })
+      store.dispatch('importTemplate', {
+        importUserId,
+        importTemplateId
+      })
+        .then(() => {
+          store.dispatch('loadTemplateNodes')
+            .then(() => {
+              store.dispatch('loadTemplateDeps')
+            })
+            .then(() => {
+              this.tempImportDialogHandler = null
+              showMessage('#doneMessage')
+            })
+        })
+    },
+    // Import Cancel
+    tempImportDialogItCancel () {
+      console.log('tempImportDialogItCancel')
     },
     // Метод сброса состояния формы создания/редактирования узла
     resetTempForm () {
@@ -373,7 +404,6 @@ export default {
       }
     },
     templatesItemClick (id) {
-      // this.selectedTempId = id
       const store = this.$store
       store.dispatch('setCurrentTemplateId', id)
         .then(() => {
@@ -388,7 +418,7 @@ export default {
       this.$store.getters.templateDeps.forEach((d, i, array) => {
         // depsArray.push(d)
         // Отправка в хранилище команды "Создать новую зависимость"
-        console.log(d, d.fromNodeId, this.templateNodesDictionary[d.fromNodeId])
+        // console.log(d, d.fromNodeId, this.templateNodesDictionary[d.fromNodeId])
         this.$store.dispatch('newDep', {
           fromNodeId: this.templateNodesDictionary[d.fromNodeId],
           toNodeId: this.templateNodesDictionary[d.toNodeId]
@@ -413,6 +443,8 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
+  span.ui-title-4
+    display inline !important
   .templates-actions-button
     margin 5px
   .templates-item
@@ -420,16 +452,4 @@ export default {
     &.selected
       background-color #CCC
       font-weight bold
-  /* .task-item
-    margin-bottom 20px
-    .ui-checkbox:checked:before
-      border-color #909399
-    &.completed
-      .ui-title-2,
-      .ui-text-regular,
-      .ui-tag
-        text-decoration line-through
-        color #909399
-    &:last-child
-      margin-bottom 0 */
 </style>

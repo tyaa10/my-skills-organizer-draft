@@ -108,7 +108,7 @@ import { required, minLength, maxLength } from 'vuelidate/lib/validators'
 export default {
   name: 'FabricCanvas',
 
-  props: ['elemsGetter', 'depsGetter', 'actionNames'],
+  props: ['elemsGetter', 'depsGetter', 'actionNames', 'bus'],
 
   components: {
     VueContext
@@ -226,12 +226,17 @@ export default {
     this.canvas.on('mouse:down', this.mouseDown)
     // Первая, безусловная отрисовка элементов и связей в области рисования
     this.fabricDraw(this.elems, this.deps)
-    /* this.$nextTick(function () {
-      this.fabricDraw(this.elems, this.deps)
-    }) */
   },
   methods: {
     // Метод отрисовки элементов и связей в области рисования
+    fabricReDraw () {
+      this.fabricDraw(this.elems, this.deps)
+      console.log(this.elems, this.deps)
+      this.canvas.renderAll()
+    },
+    fabricClearCanvas () {
+      this.canvas.remove(...this.canvas.getObjects())
+    },
     fabricDraw (elems, deps) {
       // Удалить весь список фабрик-объектов в области рисования
       this.canvas.remove(...this.canvas.getObjects())

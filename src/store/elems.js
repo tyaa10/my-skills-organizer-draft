@@ -9,7 +9,8 @@ export default ({
     // ... для узлов шаблона, выбранного в разделе "Шаблоны"
     templateElems: [],
     // Последний созданный элемент (узел)
-    lastCreatedElemId: null
+    lastCreatedElemId: null,
+    lastCreatedTemplateElemId: null
   },
   mutations: {
     newNode (
@@ -40,7 +41,6 @@ export default ({
         left
       })
       state.lastCreatedElemId = id
-      console.log('state.lastCreatedElemId', state.lastCreatedElemId)
     },
     newTemplateNode (
       state,
@@ -71,6 +71,7 @@ export default ({
         left,
         templateId
       })
+      state.lastCreatedTemplateElemId = id
     },
     loadNodes (state, payload) {
       state[payload.target] = payload.nodes
@@ -345,6 +346,9 @@ export default ({
     },
     lastCreatedElemId (state) {
       return state.lastCreatedElemId
+    },
+    lastCreatedTemplateElemId (state) {
+      return state.lastCreatedTemplateElemId
     }
   }
 })
