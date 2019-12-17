@@ -18,7 +18,7 @@
     span.ui-title-4 Accessible by id:
     = ' '
     span.ui-text-regular {{currentUserId}}@{{currentTemplateId}}
-  section#c(ref='canvasContainer')
+  section#c(ref='canvasContainer' @click='hideRightSidebar')
     FabricCanvas(:elems-getter="elemsGetter", :deps-getter="depsGetter", :action-names="actionNames", ref="fabricCanvasHandler")
   .right-sidebar.full
     .button.button-default.right-sidebar-toggle-button#templatesSidebarOpenButton(@click='toggleTemplatesSidebar')
@@ -26,11 +26,14 @@
       span(v-else) &gt;
     .container
       .sidebar-content
-        .button.button-default.templates-actions-button(@click='addTempClick') +
-        .button.button-default.templates-actions-button(@click='importTempClick') i
-        .button.button-default.templates-actions-button(v-if="checkTemplate" @click='editTempClick') e
-        .button.button-default.templates-actions-button(v-if="checkTemplate" @click='delTempClick') d
-        .button.button-default.templates-actions-button(v-if="checkTemplate" @click='useTempClick') u
+        .button.button-default.templates-actions-button(@click='addTempClick' v-tooltip="'add'") +
+        .button.button-default.templates-actions-button(@click='importTempClick' v-tooltip.top-center="'import'")
+          font-awesome-icon(:icon="'file-import'")
+        .button.button-default.templates-actions-button(v-if="checkTemplate" @click='editTempClick' v-tooltip.top-center="'edit'")
+          font-awesome-icon(:icon="'edit'")
+        .button.button-default.templates-actions-button(v-if="checkTemplate" @click='delTempClick' v-tooltip.top-center="'delete'")
+          font-awesome-icon(:icon="'trash'")
+        .button.button-default.templates-actions-button(v-if="checkTemplate" @click='useTempClick' v-tooltip.top-center="'use'") u
         .sidebar-list
           transition-group
             .sidebar-item.templates-item(
@@ -88,7 +91,8 @@
           .error(v-if="!$v.importTemplate.id.required") Field is required
       .ui-messageBox__footer
         .button.button-light.ui-messageBox-cancel Cancel
-        .button.button-primary.ui-messageBox-ok OK
+        .button.button-primary.ui-messageBox-ok(v-if="tempFormMode == 'create' || tempFormMode == 'edit'") OK
+        .button.button-primary.ui-messageBox-ok(v-else-if="tempFormMode == 'import'") OK
 </template>
 <script>
 import { showRightSidebar, hideRightSidebar, uiMessage, showMessage } from '@/assets/js/uimini.js'
@@ -179,7 +183,7 @@ export default {
       return this.$store.getters.temps
     },
     currentUserId () {
-      return this.$store.getters.user.id
+      return this.$store.getters.user.id || null
     },
     currentTemplateId () {
       return this.$store.getters.currentTemplateId
@@ -197,6 +201,12 @@ export default {
     }
   },
   methods: {
+    hideRightSidebar () {
+      if (this.templatesSidebarShown) {
+        hideRightSidebar()
+        this.templatesSidebarShown = false
+      }
+    },
     toggleTemplatesSidebar () {
       if (this.templatesSidebarShown) {
         hideRightSidebar()
@@ -237,24 +247,28 @@ export default {
       this.tempUseDialogHandler.call()
     },
     tempCreateDialogItOk () {
-      // Вызываем в хранилище действие создания шаблона
-      const store = this.$store
-      store.dispatch('newTemplate', {
-        title: this.selectedTemplate.title,
-        description: this.selectedTemplate.description,
-        access: this.selectedTemplate.access
-      })
-        .then(() => {
-          store.dispatch('loadTemplateNodes')
-            .then(() => {
-              store.dispatch('loadTemplateDeps')
-            })
-            .then(() => {
-              this.tempCreateDialogHandler = null
-              this.toggleTemplatesSidebar()
-              showMessage('#doneMessage')
-            })
+      if (!this.$v.selectedTemplate.$invalid) {
+        // Вызываем в хранилище действие создания шаблона
+        const store = this.$store
+        store.dispatch('newTemplate', {
+          title: this.selectedTemplate.title,
+          description: this.selectedTemplate.description,
+          access: this.selectedTemplate.access
         })
+          .then(() => {
+            store.dispatch('loadTemplateNodes')
+              .then(() => {
+                store.dispatch('loadTemplateDeps')
+              })
+              .then(() => {
+                this.tempCreateDialogHandler = null
+                this.toggleTemplatesSidebar()
+                showMessage('#doneMessage')
+              })
+          })
+      } else {
+        showMessage('#cancelledMessage')
+      }
     },
     tempCreateDialogItCancel () {
       // Вызываем в хранилище действие удаления выделенного узла
@@ -263,20 +277,24 @@ export default {
       showMessage('#cancelledMessage')
     },
     tempEditDialogItOk () {
-      // Вызываем в хранилище действие создания шаблона
-      // Отправлять для обновления только изменившиеся значения
+      // Вызываем в хранилище действие Edit шаблона
+      // TODO Отправлять для обновления только изменившиеся значения
       // console.log('tempEditDialogItOk')
-      this.$store.dispatch('editTemplate', {
-        changes: {
-          title: this.selectedTemplate.title,
-          description: this.selectedTemplate.description,
-          access: this.selectedTemplate.access
-        }
-      })
-        .then(() => {
-          this.tempEditDialogHandler = null
-          showMessage('#doneMessage')
+      if (!this.$v.selectedTemplate.$invalid) {
+        this.$store.dispatch('editTemplate', {
+          changes: {
+            title: this.selectedTemplate.title,
+            description: this.selectedTemplate.description,
+            access: this.selectedTemplate.access
+          }
         })
+          .then(() => {
+            this.tempEditDialogHandler = null
+            showMessage('#doneMessage')
+          })
+      } else {
+        showMessage('#cancelledMessage')
+      }
     },
     tempEditDialogItCancel () {
       // Вызываем в хранилище действие изменения выделенного Template
@@ -358,30 +376,34 @@ export default {
     },
     // Import OK
     tempImportDialogItOk () {
-      // this.$refs.fabricCanvasHandler.fabricClearCanvas()
-      const [importUserId, importTemplateId] = this.importTemplate.id.split('@')
-      const store = this.$store
-      store.dispatch('setCurrentTemplateId', null)
-        .then(() => {
-          store.dispatch('loadTemplateNodes')
-            .then(() => {
-              store.dispatch('loadTemplateDeps')
-            })
+      if (!this.$v.importTemplate.$invalid) {
+        // this.$refs.fabricCanvasHandler.fabricClearCanvas()
+        const [importUserId, importTemplateId] = this.importTemplate.id.split('@')
+        const store = this.$store
+        store.dispatch('setCurrentTemplateId', null)
+          .then(() => {
+            store.dispatch('loadTemplateNodes')
+              .then(() => {
+                store.dispatch('loadTemplateDeps')
+              })
+          })
+        store.dispatch('importTemplate', {
+          importUserId,
+          importTemplateId
         })
-      store.dispatch('importTemplate', {
-        importUserId,
-        importTemplateId
-      })
-        .then(() => {
-          store.dispatch('loadTemplateNodes')
-            .then(() => {
-              store.dispatch('loadTemplateDeps')
-            })
-            .then(() => {
-              this.tempImportDialogHandler = null
-              showMessage('#doneMessage')
-            })
-        })
+          .then(() => {
+            store.dispatch('loadTemplateNodes')
+              .then(() => {
+                store.dispatch('loadTemplateDeps')
+              })
+              .then(() => {
+                this.tempImportDialogHandler = null
+                showMessage('#doneMessage')
+              })
+          })
+      } else {
+        showMessage('#cancelledMessage')
+      }
     },
     // Import Cancel
     tempImportDialogItCancel () {

@@ -55,7 +55,7 @@ export default {
       linkMenu: [
         {title: 'Home', url: '/'},
         {title: 'Templates', url: '/templates'},
-        {title: 'AboutUs', url: '/about'}
+        {title: 'About', url: '/about'}
       ]
     }
   },

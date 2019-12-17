@@ -16,7 +16,24 @@ import {config} from './helpers/firebaseConfig'
 import Vuelidate from 'vuelidate'
 // import TreeView from 'vue-json-tree-view'
 
+import VueTour from 'vue-tour'
+import VueCookies from 'vue-cookies'
+import VTooltip from 'v-tooltip'
+
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faUserSecret, faFileImport, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+library.add(faUserSecret, faFileImport, faEdit, faTrash)
+
+require('vue-tour/dist/vue-tour.css')
+
 Vue.use(Vuelidate)
+Vue.use(VueTour)
+Vue.use(VueCookies)
+Vue.use(VTooltip)
+Vue.component('font-awesome-icon', FontAwesomeIcon)
+
+VueCookies.config('365d')
 
 Vue.config.productionTip = false
 

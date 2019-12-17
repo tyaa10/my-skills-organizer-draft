@@ -97,6 +97,10 @@
               .col-xs-6
                 // Кнопка подтвреждения добавления / изменения узла
                 button.button--round.button--big.button.button-success(type='submit' :disabled='$v.selectedNode.$invalid' @click.prevent='applyNodeDataClick') Apply
+    v-tour(name='canvas' :steps='steps' :callbacks="canvasTourCallbacks")
+      template(slot-scope='tour')
+        transition(name='fade')
+          v-step(v-if='tour.currentStep === index' v-for='(step, index) of tour.steps' :key='index' :step='step' :previous-step='tour.previousStep' :next-step='tour.nextStep' :stop='tour.stop' :is-first='tour.isFirst' :is-last='tour.isLast' :labels='tour.labels')
 </template>
 
 <script>
@@ -104,6 +108,7 @@ import { fabric } from 'fabric'
 import { VueContext } from 'vue-context'
 import { uiMessage, showMessage, showSidebar, hideSidebar } from '@/assets/js/uimini.js'
 import { required, minLength, maxLength } from 'vuelidate/lib/validators'
+import '../assets/css/main.css'
 
 export default {
   name: 'FabricCanvas',
@@ -134,7 +139,27 @@ export default {
       formMode: '',
       dependenceCreationHint: null,
       dependentNodeId: null,
-      selectedNodeDepsSatisfied: false // Удовлетворены ли все зависиомсти выделенного узла
+      selectedNodeDepsSatisfied: false, // Удовлетворены ли все зависиомсти выделенного узла
+      // v-tour
+      steps: [
+        {
+          target: '.fab', // We're using document.querySelector() under the hood
+          content: `Start planning a new aim`
+        },
+        {
+          target: '.form-item > #titleInput',
+          content: `Enter goal name`
+        },
+        {
+          target: '.ui-checkbox-wrapper',
+          content: `Tick to improve contextual Ads service`
+        }
+      ],
+      canvasTourCallbacks: {
+        onPreviousStep: this.PreviousStepCallback,
+        onNextStep: this.NextStepCallback,
+        onStop: this.StopCallback
+      }
     }
   },
   // Правила валидации
@@ -196,7 +221,7 @@ export default {
   watch: {
     // Если изменился список узлов или связей - обновляем область рисования
     elems (newVal, oldVal) {
-      console.log('elems')
+      // console.log('elems')
       this.canvas.setHeight(this.recomputeCanvasHeight())
       this.canvas.renderAll()
       this.fabricDraw(this.elems, this.deps)
@@ -226,17 +251,20 @@ export default {
     this.canvas.on('mouse:down', this.mouseDown)
     // Первая, безусловная отрисовка элементов и связей в области рисования
     this.fabricDraw(this.elems, this.deps)
+    if (!this.$cookies.get('vtour_fabric_canvas_finished')) {
+      this.$tours['canvas'].start()
+    }
   },
   methods: {
     // Метод отрисовки элементов и связей в области рисования
-    fabricReDraw () {
+    /* fabricReDraw () {
       this.fabricDraw(this.elems, this.deps)
       console.log(this.elems, this.deps)
       this.canvas.renderAll()
     },
     fabricClearCanvas () {
       this.canvas.remove(...this.canvas.getObjects())
-    },
+    }, */
     fabricDraw (elems, deps) {
       // Удалить весь список фабрик-объектов в области рисования
       this.canvas.remove(...this.canvas.getObjects())
@@ -288,8 +316,17 @@ export default {
       this.resetForm()
       // Переключение флага режима формы редактирования данных узла в состояние создания нового узла
       this.formMode = 'create'
+      // Установка обработчика завершения перехода левой панели в открытое состояние
+      document.querySelector('.sidebar').addEventListener('transitionend', this.onShowSidebarEnd, false)
       // Вызов отображения боковой панели с формой редактирования данных узла
       showSidebar()
+    },
+    // Обработчик завершения перехода левой панели в открытое состояние
+    onShowSidebarEnd () {
+      // console.log('onShowSidebarEnd')
+      this.$tours['canvas'].nextStep()
+      // Удаление обработчика завершения перехода левой панели в открытое состояние
+      document.querySelector('.sidebar').removeEventListener('transitionend', this.onShowSidebarEnd, false)
     },
     // Метод обработки перетаскивания узла по области рисования
     nodeMoving (ev) {
@@ -822,6 +859,23 @@ export default {
         }
       }
       return canvasHeight
+    },
+    PreviousStepCallback (currentStep) {
+      // console.log('[Vue Tour] A custom previousStep callback has been called on step ' + (currentStep + 1))
+    },
+    NextStepCallback (currentStep) {
+      // console.log('[Vue Tour] A custom nextStep callback has been called on step ' + (currentStep + 1))
+      if (currentStep === 0) {
+        // console.log('[Vue Tour] A custom nextStep callback has been called from step 2 to step 3')
+        showSidebar()
+      }
+      // console.log(this.$tours['canvas'].isLast)
+    },
+    StopCallback () {
+      // console.log(this.$tours['canvas'].isLast)
+      if (this.$tours['canvas'].isLast) {
+        this.$cookies.set('vtour_fabric_canvas_finished', true)
+      }
     }
   }
 }
