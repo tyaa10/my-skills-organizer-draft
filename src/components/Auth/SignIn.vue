@@ -4,8 +4,8 @@
     .container
       .row.grid-center
         .col-xs-12.col-md-4.auth__form
-          h1.ui-title-1 Visualize Your Aims and Achievements
-          p MySkillsOrganizer is designed to manage your achievements and creative tasks. Add target nodes and dependencies between them, share the map of your self-development with the whole world!
+          h1.ui-title-1 {{$t('signin.header')}}
+          p {{$t('signin.description')}}
         // Ячейка сетки для отображения формы входа в учетную запись Гугл
         .col-xs-12.col-md-4
           #firebaseui-auth-container
@@ -23,15 +23,19 @@ export default {
   name: 'signin',
   data () {
     return {
-      steps: [
-        {
-          target: '#firebaseui-auth-container', // We're using document.querySelector() under the hood
-          content: `Sign in to your Google Account`
-        }
-      ],
       signinTourCallbacks: {
         onStop: this.StopCallback
       }
+    }
+  },
+  computed: {
+    steps () {
+      return [
+        {
+          target: '#firebaseui-auth-container', // We're using document.querySelector() under the hood
+          content: this.$t('signin.vtour.signinGoogle')
+        }
+      ]
     }
   },
   mounted () {
@@ -42,7 +46,11 @@ export default {
         firebase.auth.GoogleAuthProvider.PROVIDER_ID
       ]
     }
-    var ui = new firebaseui.auth.AuthUI(firebase.auth())
+    // var ui = new firebaseui.auth.AuthUI(firebase.auth())
+    let ui = firebaseui.auth.AuthUI.getInstance()
+    if (!ui) {
+      ui = new firebaseui.auth.AuthUI(firebase.auth())
+    }
     ui.start('#firebaseui-auth-container', uiConfig)
     if (!this.$cookies.get('vtour_signin_finished')) {
       this.$tours['signin'].start()

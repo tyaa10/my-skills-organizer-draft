@@ -3,19 +3,19 @@
   // В верхней части разметки располагаем представления для всплывающих
   // сообщений из библиотеки uimini
   #cancelledMessage.ui-message.ui-message--danger
-    span.message-title Cancelled
+    span.message-title {{$t('templates.messages.cancelled')}}
   #doneMessage.ui-message.ui-message--success
-    span.message-title Done
+    span.message-title {{$t('templates.messages.done')}}
   #errorMessage.ui-message.ui-message--danger
-    span.message-title Error
+    span.message-title {{$t('templates.messages.error')}}
   // Секция, содержащая экземпляр пользовательского компонента FabricCanvas
   // для отображения дерева целей и задач текущего шаблона
-  .templateData(v-if="currentUserId && currentTemplateId")
-    span.ui-title-4 Template:
+  .templateData(v-if="currentUserId && currentTemplateId && selectedTemplate.access")
+    span.ui-title-4 {{$t('templates.header.template')}}:
     = ' '
     span.ui-text-regular "{{selectedTemplate.title}}".
     = ' '
-    span.ui-title-4 Accessible by id:
+    span.ui-title-4 {{$t('templates.header.accessible_by_id')}}:
     = ' '
     span.ui-text-regular {{currentUserId}}@{{currentTemplateId}}
   section#c(ref='canvasContainer' @click='hideRightSidebar')
@@ -26,14 +26,14 @@
       span(v-else) &gt;
     .container
       .sidebar-content
-        .button.button-default.templates-actions-button(@click='addTempClick' v-tooltip="'add'") +
-        .button.button-default.templates-actions-button(@click='importTempClick' v-tooltip.top-center="'import'")
+        .button.button-default.templates-actions-button(@click='addTempClick' v-tooltip="$t('templates.action_icons.add')") +
+        .button.button-default.templates-actions-button(@click='importTempClick' v-tooltip.top-center="$t('templates.action_icons.import')")
           font-awesome-icon(:icon="'file-import'")
-        .button.button-default.templates-actions-button(v-if="checkTemplate" @click='editTempClick' v-tooltip.top-center="'edit'")
+        .button.button-default.templates-actions-button(v-if="checkTemplate" @click='editTempClick' v-tooltip.top-center="$t('templates.action_icons.edit')")
           font-awesome-icon(:icon="'edit'")
-        .button.button-default.templates-actions-button(v-if="checkTemplate" @click='delTempClick' v-tooltip.top-center="'delete'")
+        .button.button-default.templates-actions-button(v-if="checkTemplate" @click='delTempClick' v-tooltip.top-center="$t('templates.action_icons.delete')")
           font-awesome-icon(:icon="'trash'")
-        .button.button-default.templates-actions-button(v-if="checkTemplate" @click='useTempClick' v-tooltip.top-center="'use'") u
+        .button.button-default.templates-actions-button(v-if="checkTemplate" @click='useTempClick' v-tooltip.top-center="$t('templates.action_icons.use')") u
         .sidebar-list
           transition-group
             .sidebar-item.templates-item(
@@ -51,25 +51,25 @@
         span.button-close.ui-messageBox-close
       .ui-messageBox__content
         span {{formStaticContent[tempFormMode].description}}
-        // Форма создания / редактирования узла.
+        // Форма создания / редактирования Template.
         // Подавление стандартной отправки пост-запроса формой
         form(v-if="tempFormMode == 'create' || tempFormMode == 'edit'" v-on:submit.prevent='')
           // Привязка блока с полем ввода к свойству модели
           // с указанием текстов ошибок валидации
           .form-item(:class="{ 'form-group--error': $v.selectedTemplate.title.$error }")
-            label.form__label(for='titleInput') Title
-            // Поле ввода заголовка узла
-            input.form__input#titleInput(type='text' placeholder='Title' v-model.trim="$v.selectedTemplate.title.$model")
-          .error(v-if="!$v.selectedTemplate.title.required") Field is required
-          .error(v-if="!$v.selectedTemplate.title.minLength") Title must have at least {{$v.selectedTemplate.title.$params.minLength.min}} letters
-          .error(v-if="!$v.selectedTemplate.title.maxLength") Title must have at most {{$v.selectedTemplate.title.$params.maxLength.max}} letters
+            label.form__label(for='titleInput') {{$t('templates.dialogs.create.title')}}
+            // Поле ввода заголовка Template
+            input.form__input#titleInput(type='text' :placeholder="$t('templates.dialogs.create.title_input.label')" v-model.trim="$v.selectedTemplate.title.$model")
+          .error(v-if="!$v.selectedTemplate.title.required") {{$t('templates.dialogs.create.title_input.required_error')}}
+          .error(v-if="!$v.selectedTemplate.title.minLength") {{$t('templates.dialogs.create.title_input.at_least_error', {number: $v.selectedTemplate.title.$params.minLength.min})}}
+          .error(v-if="!$v.selectedTemplate.title.maxLength") {{$t('templates.dialogs.create.title_input.at_most_error', {number: $v.selectedTemplate.title.$params.maxLength.max})}}
           .form-item(:class="{ 'form-group--error': $v.selectedTemplate.description.$error }")
-            label.form__label(for='descriptionTextarea') Description
+            label.form__label(for='descriptionTextarea') {{$t('templates.dialogs.create.description_textarea.label')}}
             // Область ввода текста краткого описания узла
-            textarea.form__input#descriptionTextarea(placeholder='Description …' v-model.trim="$v.selectedTemplate.description.$model")
-          .error(v-if="!$v.selectedTemplate.description.required") Field is required
-          .error(v-if="!$v.selectedTemplate.description.minLength") Description must have at least {{$v.selectedTemplate.description.$params.minLength.min}} letters
-          .error(v-if="!$v.selectedTemplate.description.maxLength") Description must have at most {{$v.selectedTemplate.description.$params.maxLength.max}} letters
+            textarea.form__input#descriptionTextarea(:placeholder="$t('templates.dialogs.create.description_textarea.label')" v-model.trim="$v.selectedTemplate.description.$model")
+          .error(v-if="!$v.selectedTemplate.description.required") {{$t('templates.dialogs.create.description_textarea.required_error')}}
+          .error(v-if="!$v.selectedTemplate.description.minLength") {{$t('templates.dialogs.create.description_textarea.at_least_error', {number: $v.selectedTemplate.description.$params.minLength.min})}}
+          .error(v-if="!$v.selectedTemplate.description.maxLength") {{$t('templates.dialogs.create.description_textarea.at_most_error', {number: $v.selectedTemplate.description.$params.maxLength.max})}}
           .row
             .col-xs-6(style='margin-bottom: 16px;')
               ul
@@ -78,7 +78,7 @@
                     // Флаг открытия доступа к данным узла для систем сбора информации
                     // о потенциальных клиентах
                     input#accessCheckbox.ui-checkbox(type='checkbox' v-model='selectedTemplate.access')
-                    label.label--inline(for='accessCheckbox') Public
+                    label.label--inline(for='accessCheckbox' v-tooltip="$t('templates.dialogs.create.public.tooltip')") {{$t('templates.dialogs.create.public.label')}}
         // Форма импорта шаблона по его глобальному ИД
         // Подавление стандартной отправки пост-запроса формой
         form(v-if="tempFormMode == 'import'" v-on:submit.prevent='')
@@ -87,12 +87,12 @@
           .form-item(:class="{ 'form-group--error': $v.importTemplate.id.$error }")
             label.form__label(for='importTemplateIdInput') Id:
             // Поле ввода глобального ИД импортируемого шаблона
-            input.form__input#importTemplateIdInput(type='text' placeholder='Import Template Id' v-model.trim="$v.importTemplate.id.$model")
-          .error(v-if="!$v.importTemplate.id.required") Field is required
+            input.form__input#importTemplateIdInput(type='text' :placeholder="$t('templates.dialogs.import.id_input.placeholder')" v-model.trim="$v.importTemplate.id.$model")
+          .error(v-if="!$v.importTemplate.id.required") {{$t('templates.dialogs.import.id_input.required_error')}}
       .ui-messageBox__footer
-        .button.button-light.ui-messageBox-cancel Cancel
-        .button.button-primary.ui-messageBox-ok(v-if="tempFormMode == 'create' || tempFormMode == 'edit'") OK
-        .button.button-primary.ui-messageBox-ok(v-else-if="tempFormMode == 'import'") OK
+        .button.button-light.ui-messageBox-cancel {{formStaticContent.buttons.cancel}}
+        .button.button-primary.ui-messageBox-ok(v-if="tempFormMode == 'create' || tempFormMode == 'edit'") {{formStaticContent.buttons.ok}}
+        .button.button-primary.ui-messageBox-ok(v-else-if="tempFormMode == 'import'") {{formStaticContent.buttons.ok}}
 </template>
 <script>
 import { showRightSidebar, hideRightSidebar, uiMessage, showMessage } from '@/assets/js/uimini.js'
@@ -127,28 +127,6 @@ export default {
       tempUseDialogHandler: null,
       tempImportDialogHandler: null,
       tempFormMode: 'create',
-      formStaticContent: {
-        create: {
-          title: 'Create',
-          description: 'Create a New Template'
-        },
-        edit: {
-          title: 'Edit',
-          description: 'Edit Selected Template'
-        },
-        delete: {
-          title: 'Delete',
-          description: 'Delete Selected Template'
-        },
-        use: {
-          title: 'Use',
-          description: 'Add a copy of the selected template to the main skill tree?'
-        },
-        import: {
-          title: 'Import',
-          description: 'Import template by global id'
-        }
-      },
       submitStatus: '',
       treeCopyingCompleted: false,
       templateNodesDictionary: null,
@@ -183,7 +161,7 @@ export default {
       return this.$store.getters.temps
     },
     currentUserId () {
-      return this.$store.getters.user.id || null
+      return this.$store.getters.user ? this.$store.getters.user.id : null
     },
     currentTemplateId () {
       return this.$store.getters.currentTemplateId
@@ -191,6 +169,34 @@ export default {
     checkTemplate () {
       // Проверка: есть ли выделенный шаблон в списке
       return this.currentTemplateId !== null
+    },
+    formStaticContent () {
+      return {
+        create: {
+          title: this.$t('templates.dialogs.create.title'),
+          description: this.$t('templates.dialogs.create.description')
+        },
+        edit: {
+          title: this.$t('templates.dialogs.edit.title'),
+          description: this.$t('templates.dialogs.edit.description')
+        },
+        delete: {
+          title: this.$t('templates.dialogs.delete.title'),
+          description: this.$t('templates.dialogs.delete.description')
+        },
+        use: {
+          title: this.$t('templates.dialogs.use.title'),
+          description: this.$t('templates.dialogs.use.description')
+        },
+        import: {
+          title: this.$t('templates.dialogs.import.title'),
+          description: this.$t('templates.dialogs.import.description')
+        },
+        buttons: {
+          ok: this.$t('templates.dialogs.buttons.ok'),
+          cancel: this.$t('templates.dialogs.buttons.cancel')
+        }
+      }
     }
   },
   watch: {
@@ -372,7 +378,9 @@ export default {
     },
     tempUseDialogItCancel () {
       // Вызываем в хранилище действие удаления выделенного узла
-      console.log('tempUseDialogItCancel')
+      // console.log('tempUseDialogItCancel')
+      this.tempUseDialogHandler = null
+      showMessage('#cancelledMessage')
     },
     // Import OK
     tempImportDialogItOk () {
@@ -407,7 +415,9 @@ export default {
     },
     // Import Cancel
     tempImportDialogItCancel () {
-      console.log('tempImportDialogItCancel')
+      // console.log('tempImportDialogItCancel')
+      this.tempUseDialogHandler = null
+      showMessage('#cancelledMessage')
     },
     // Метод сброса состояния формы создания/редактирования узла
     resetTempForm () {

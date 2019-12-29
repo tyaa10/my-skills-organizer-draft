@@ -27,6 +27,8 @@
     "vue-context": "^3.4.2",
     "vue-cookies": "^1.6.1",
     "vue-fabric": "^0.1.19",
+    "vue-flag-icon": "^1.0.6",
+    "vue-i18n": "^8.15.3",
     "vue-router": "^3.0.1",
     "vue-tour": "^1.1.0",
     "vuelidate": "^0.7.4",

@@ -5,9 +5,9 @@
     // В верхней части разметки располагаем представления для всплывающих
     // сообщений из библиотеки uimini
     #cancelledMessage.ui-message.ui-message--danger
-      span.message-title Cancelled
+      span.message-title {{$t('fabric_canvas.messages.cancelled')}}
     #doneMessage.ui-message.ui-message--success
-      span.message-title Done
+      span.message-title {{$t('fabric_canvas.messages.done')}}
     // html-элемент canvas, на котором библиотека Fabric.js
     // будет осуществлять рисование
     canvas.app-canvas#canvas(ref='canvas') Your browser is too old!
@@ -16,21 +16,23 @@
     // что сейчас выбран один узел или одна связь
     vue-context(ref='menu' v-if="checkNode || checkDep")
       ul
-        li#editNodeContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkNode") Edit Node
-        li#addDependencyContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkNode") Add Dependency
-        li#deleteNodeContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkNode") Delete Node
-        li#deleteDepContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkDep") Delete Dependency
-    // Dialog Box - Delete or not delete the node
+        li#editNodeContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkNode") {{$t('fabric_canvas.context_menu.edit_node')}}
+        li#addDependencyContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkNode") {{$t('fabric_canvas.context_menu.add_dependency')}}
+        li#deleteNodeContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkNode") {{$t('fabric_canvas.context_menu.delete_node')}}
+        li#deleteDepContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkDep") {{$t('fabric_canvas.context_menu.delete_dependency')}}
+    // Dialog Box - Delete or not delete selected node or dependency
     .ui-messageBox__wrapper#fabricCanvasModal
       .ui-messageBox.fadeInDown
         .ui-messageBox__header
-          span.messageBox-title Delete the Node
+          span.messageBox-title(v-if="checkNode") {{$t('fabric_canvas.dialogs.delete_node.title')}}
+          span.messageBox-title(v-if="checkDep") {{$t('fabric_canvas.dialogs.delete_dependency.title')}}
           span.button-close.ui-messageBox-close
         .ui-messageBox__content
-          span Node will be deleted permanently
+          span(v-if="checkNode") {{$t('fabric_canvas.dialogs.delete_node.content')}}
+          span(v-if="checkDep") {{$t('fabric_canvas.dialogs.delete_dependency.content')}}
         .ui-messageBox__footer
-          .button.button-light.ui-messageBox-cancel Cancel
-          .button.button-primary.ui-messageBox-ok OK
+          .button.button-light.ui-messageBox-cancel {{$t('fabric_canvas.dialogs.common.cancel')}}
+          .button.button-primary.ui-messageBox-ok {{$t('fabric_canvas.dialogs.common.ok')}}
     // Главная кнопка экрана: начать добавление нового узла
     .fab(@click='addNodeClick') +
     .sidebar-open-button
@@ -49,38 +51,38 @@
             // Привязка блока с полем ввода к свойству модели
             // с указанием текстов ошибок валидации
             .form-item(:class="{ 'form-group--error': $v.selectedNode.title.$error }")
-              label.form__label(for='titleInput') Title
+              label.form__label(for='titleInput') {{$t('fabric_canvas.node_form.title_input.label')}}
               // Поле ввода заголовка узла
-              input.form__input#titleInput(type='text' placeholder='Title' v-model.trim="$v.selectedNode.title.$model")
-            .error(v-if="!$v.selectedNode.title.required") Field is required
-            .error(v-if="!$v.selectedNode.title.minLength") Title must have at least {{$v.selectedNode.title.$params.minLength.min}} letters
-            .error(v-if="!$v.selectedNode.title.maxLength") Title must have at most {{$v.selectedNode.title.$params.maxLength.max}} letters
+              input.form__input#titleInput(type='text' :placeholder="$t('fabric_canvas.node_form.title_input.label')" v-model.trim="$v.selectedNode.title.$model")
+            .error(v-if="!$v.selectedNode.title.required") {{$t('fabric_canvas.node_form.title_input.required_error')}}
+            .error(v-if="!$v.selectedNode.title.minLength") {{$t('fabric_canvas.node_form.title_input.at_least_error', {number: $v.selectedNode.title.$params.minLength.min})}}
+            .error(v-if="!$v.selectedNode.title.maxLength") {{$t('fabric_canvas.node_form.title_input.at_most_error', {number: $v.selectedNode.title.$params.maxLength.max})}}
             .form-item(:class="{ 'form-group--error': $v.selectedNode.type.$error }")
-              label.form__label(for='typeSelect') Type
+              label.form__label(for='typeSelect') {{$t('fabric_canvas.node_form.type_select.label')}}
               // Выпадающий список выбора типа узла
               select.form__input#typeSelect(v-model.trim="$v.selectedNode.type.$model")
-                option(disabled='' value='') select type
-                option(value='1') basis
-                option(value='2') desobjectivation
-                option(value='3') objectification
-            .error(v-if="!$v.selectedNode.type.required") Field is required
+                option(disabled='' value='') {{$t('fabric_canvas.node_form.type_select.select_type')}}
+                option(value='1') {{$t('fabric_canvas.node_form.type_select.basis')}}
+                option(value='2') {{$t('fabric_canvas.node_form.type_select.desobjectivation')}}
+                option(value='3') {{$t('fabric_canvas.node_form.type_select.objectification')}}
+            .error(v-if="!$v.selectedNode.type.required") {{$t('fabric_canvas.node_form.type_select.required_error')}}
             .form-item(:class="{ 'form-group--error': $v.selectedNode.description.$error }")
-              label.form__label(for='descriptionTextarea') Description
+              label.form__label(for='descriptionTextarea') {{$t('fabric_canvas.node_form.description_textarea.label')}}
               // Область ввода текста краткого описания узла
-              textarea.form__input#descriptionTextarea(placeholder='Description …' v-model.trim="$v.selectedNode.description.$model")
-            .error(v-if="!$v.selectedNode.description.required") Field is required
-            .error(v-if="!$v.selectedNode.description.minLength") Description must have at least {{$v.selectedNode.description.$params.minLength.min}} letters
-            .error(v-if="!$v.selectedNode.description.maxLength") Description must have at most {{$v.selectedNode.description.$params.maxLength.max}} letters
+              textarea.form__input#descriptionTextarea(:placeholder="$t('fabric_canvas.node_form.description_textarea.label')" v-model.trim="$v.selectedNode.description.$model")
+            .error(v-if="!$v.selectedNode.description.required") {{$t('fabric_canvas.node_form.description_textarea.required_error')}}
+            .error(v-if="!$v.selectedNode.description.minLength") {{$t('fabric_canvas.node_form.description_textarea.at_least_error', {number: $v.selectedNode.description.$params.minLength.min})}}
+            .error(v-if="!$v.selectedNode.description.maxLength") {{$t('fabric_canvas.node_form.title_input.at_most_error', {number: $v.selectedNode.description.$params.maxLength.max})}}
             // Выпадающий список выбора состояния узла
             .form-item
-              label.form__label(for='statusSelect') Status
+              label.form__label(for='statusSelect') {{$t('fabric_canvas.node_form.status_select.label')}}
               select.form__input#statusSelect(v-model='selectedNode.status')
-                option(value='1') new
-                option(value='2') scheduled
-                option(value='3' v-if="isNodeDepsSatisfied") started
-                option(value='4' v-if="isNodeDepsSatisfied") suspended
-                option(value='5') cancelled
-                option(value='6' v-if="isNodeDepsSatisfied") done
+                option(value='1') {{$t('fabric_canvas.node_form.status_select.new')}}
+                option(value='2') {{$t('fabric_canvas.node_form.status_select.scheduled')}}
+                option(value='3' v-if="isNodeDepsSatisfied") {{$t('fabric_canvas.node_form.status_select.started')}}
+                option(value='4' v-if="isNodeDepsSatisfied") {{$t('fabric_canvas.node_form.status_select.suspended')}}
+                option(value='5') {{$t('fabric_canvas.node_form.status_select.cancelled')}}
+                option(value='6' v-if="isNodeDepsSatisfied") {{$t('fabric_canvas.node_form.status_select.done')}}
             .row
               .col-xs-6(style='margin-bottom: 16px;')
                 ul
@@ -89,14 +91,14 @@
                       // Флаг открытия доступа к данным узла для систем сбора информации
                       // о потенциальных клиентах
                       input#accessCheckbox.ui-checkbox(type='checkbox' v-model='selectedNode.access')
-                      label.label--inline(for='accessCheckbox') Public
+                      label.label--inline(for='accessCheckbox' v-tooltip="$t('fabric_canvas.node_form.public.tooltip')") {{$t('fabric_canvas.node_form.public.label')}}
             .row.grid-middle
               .col-xs-6
                 // Кнопка отмены добавления / изменения узла
-                button.button--round.button--big.button.button-default(type='reset' @click='resetForm') Discard
+                button.button--round.button--big.button.button-default(type='reset' @click='resetForm') {{$t('fabric_canvas.node_form.buttons.discard')}}
               .col-xs-6
                 // Кнопка подтвреждения добавления / изменения узла
-                button.button--round.button--big.button.button-success(type='submit' :disabled='$v.selectedNode.$invalid' @click.prevent='applyNodeDataClick') Apply
+                button.button--round.button--big.button.button-success(type='submit' :disabled='$v.selectedNode.$invalid' @click.prevent='applyNodeDataClick') {{$t('fabric_canvas.node_form.buttons.apply')}}
     v-tour(name='canvas' :steps='steps' :callbacks="canvasTourCallbacks")
       template(slot-scope='tour')
         transition(name='fade')
@@ -140,21 +142,6 @@ export default {
       dependenceCreationHint: null,
       dependentNodeId: null,
       selectedNodeDepsSatisfied: false, // Удовлетворены ли все зависиомсти выделенного узла
-      // v-tour
-      steps: [
-        {
-          target: '.fab', // We're using document.querySelector() under the hood
-          content: `Start planning a new aim`
-        },
-        {
-          target: '.form-item > #titleInput',
-          content: `Enter goal name`
-        },
-        {
-          target: '.ui-checkbox-wrapper',
-          content: `Tick to improve contextual Ads service`
-        }
-      ],
       canvasTourCallbacks: {
         onPreviousStep: this.PreviousStepCallback,
         onNextStep: this.NextStepCallback,
@@ -216,6 +203,23 @@ export default {
     isNodeDepsSatisfied () {
       // Проверка: удовлетворены ли все зависимости выделенного узла
       return this.selectedNodeDepsSatisfied
+    },
+    // v-tour
+    steps () {
+      return [
+        {
+          target: '.fab', // We're using document.querySelector() under the hood
+          content: this.$t('fabric_canvas.vtour.start_planning')
+        },
+        {
+          target: '.form-item > #titleInput',
+          content: this.$t('fabric_canvas.vtour.enter_name')
+        },
+        {
+          target: '.ui-checkbox-wrapper',
+          content: this.$t('fabric_canvas.vtour.improve_ads_service')
+        }
+      ]
     }
   },
   watch: {

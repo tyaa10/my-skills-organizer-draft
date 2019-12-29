@@ -23,6 +23,11 @@ import VTooltip from 'v-tooltip'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faUserSecret, faFileImport, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+
+import { i18n } from './plugins/i18n'
+
+import FlagIcon from 'vue-flag-icon'
+
 library.add(faUserSecret, faFileImport, faEdit, faTrash)
 
 require('vue-tour/dist/vue-tour.css')
@@ -31,6 +36,7 @@ Vue.use(Vuelidate)
 Vue.use(VueTour)
 Vue.use(VueCookies)
 Vue.use(VTooltip)
+Vue.use(FlagIcon)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 VueCookies.config('365d')
@@ -45,6 +51,7 @@ new Vue({
   el: '#app',
   router,
   store,
+  i18n,
   components: { App },
   template: '<App/>',
   propData: {
@@ -62,6 +69,13 @@ new Vue({
       if (user) {
         // Запоминаем его модель в глобальную переменную
         MAIN_THIS.$lastUser = user
+        /* // TODO
+        const LOCALE = MAIN_THIS.$store.getters.locale
+        import(`./lang/${LOCALE}.json`)
+          .then((msgs) => {
+            this.$i18n.setLocaleMessage(LOCALE, msgs)
+            this.$i18n.locale = LOCALE
+          }) */
         // Переходим на главный раздел сайта
         MAIN_THIS.$router.push('/')
         // Получение уведомлений при помощи firebase.notifications() здесь отключено

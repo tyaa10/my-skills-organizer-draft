@@ -9,14 +9,13 @@ import deps from './dependencies'
 import messaging from './messaging'
 import common from './common'
 import templates from './templates'
-// import User from './UserModel'
-// import Node from './NodeModel'
+import lang from './lang'
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
   modules: {
-    elems, user, common, deps, messaging, templates
+    elems, user, common, deps, messaging, templates, lang
   }/* ,
   plugins: [createPersistedState()] */
 })

@@ -29,12 +29,24 @@
                   router-link.navbar-link(
                     :to="`${link.url}`"
                   ) {{ link.title }}
+                // Статическое формирование пункта меню "Language"
+                li.navbar-item
+                  span.lang-icon(
+                    @click="setLocale('en')"
+                    :class="{ 'active-lang': this.$i18n.locale === 'en' }"
+                  )
+                    flag(:iso="'gb'")
+                  span.lang-icon(
+                    @click="setLocale('ru')"
+                    :class="{ 'active-lang': this.$i18n.locale === 'ru' }"
+                  )
+                    flag(:iso="'ru'")
                 // Статическое формирование пункта меню "Выйти"
                 li.navbar-item(
                   v-if="checkUser"
                   @click='signOut'
                 )
-                  span.navbar-link SignOut ({{userData.name}})
+                  span.navbar-link {{$t('app.signout')}} ({{userData.name}})
                     img(:src="userData.photo" style="height: 32px; width: 32px; border-radius: 50%")
     // Место для отображения компонента, соответствующего текущему роуту
     router-view
@@ -51,12 +63,7 @@ import store from './store'
 export default {
   data () {
     return {
-      menuShow: false,
-      linkMenu: [
-        {title: 'Home', url: '/'},
-        {title: 'Templates', url: '/templates'},
-        {title: 'About', url: '/about'}
-      ]
+      menuShow: false
     }
   },
   props: ['firebaseMessagingTokenKey', 'lastUser'],
@@ -65,6 +72,7 @@ export default {
     firebase.auth().onAuthStateChanged(function (user) {
       if (user) {
         store.dispatch('loggedUser', user)
+        store.dispatch('loadLocale', user)
         store.dispatch('loadNodes', user)
         store.dispatch('loadDeps', user)
         store.dispatch('loadTemplates', user)
@@ -80,6 +88,16 @@ export default {
     },
     isLoading () {
       return this.$store.getters.loading
+    },
+    linkMenu () {
+      return (this.checkUser) ? [
+        {title: this.$t('home.home'), url: '/'},
+        {title: this.$t('templates.templates'), url: '/templates'},
+        {title: this.$t('about.about'), url: '/about'}
+      ] : [
+        {title: this.$t('signin.signin'), url: '/signin'},
+        {title: this.$t('about.about'), url: '/about'}
+      ]
     }
   },
   // Наблюдение за значением route
@@ -87,7 +105,7 @@ export default {
     $route (to, from) {
       // Если нет текущего пользователя
       // и текущий роут не "Вход"
-      if (!this.checkUser && to.name !== 'signin') {
+      if (!this.checkUser && (to.name !== 'signin' && to.name !== 'about')) {
         // Переадресуем пользователя на раздел "Вход"
         this.$router.push('/signin')
       }
@@ -107,6 +125,9 @@ export default {
       store.dispatch('setTokenKey', null)
       // Вызываем выход из учетной записи в текущем приложении
       store.dispatch('logoutUser')
+    },
+    setLocale (locale) {
+      store.dispatch('setLocale', locale)
     }
   }
 }
@@ -114,4 +135,11 @@ export default {
 
 <style lang="stylus">
   @import './assets/stylus/main.styl'
+</style>
+<style scoped lang="stylus">
+  .lang-icon
+    margin-left 5px
+    margin-right 5px
+  .active-lang
+    border 4px double green
 </style>

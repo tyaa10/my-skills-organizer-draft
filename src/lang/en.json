@@ -1,0 +1,177 @@
+{
+  "app": {
+    "signout": "SignOut"
+  },
+  "home": {
+    "home": "Home",
+    "header": "Start right now - reach your goals tomorrow!",
+    "marking": {
+      "new": "New",
+      "scheduled_not_satisfied": "Scheduled (some deps are not satisfied)",
+      "scheduled_satisfied": "Scheduled (no deps or they are satisfied)",
+      "started": "Started",
+      "suspended": "Suspended",
+      "cancelled": "Cancelled",
+      "done": "Done"
+    }
+  },
+  "fabric_canvas": {
+    "messages": {
+      "cancelled": "Cancelled",
+      "done": "Done"
+    },
+    "context_menu": {
+      "edit_node": "Edit Node",
+      "add_dependency": "Add Dependency",
+      "delete_node": "Delete Node",
+      "delete_dependency": "Delete Dependency"
+    },
+    "dialogs": {
+      "delete_node": {
+        "title": "Delete Node",
+        "content": "The node will be deleted permanently"
+      },
+      "delete_dependency": {
+        "title": "Delete Dependency",
+        "content": "The dependency will be deleted permanently"
+      },
+      "common": {
+        "ok": "OK",
+        "cancel": "Cancel"
+      }
+    },
+    "node_form": {
+      "title_input": {
+        "label": "Title",
+        "required_error": "Field is required",
+        "at_least_error": "Title must have at least {number} letters",
+        "at_most_error": "Title must have at most {number} letters"
+      },
+      "type_select": {
+        "label": "Type",
+        "select_type": "select type",
+        "basis": "basis",
+        "desobjectivation": "desobjectivation",
+        "objectification": "objectification",
+        "required_error": "Field is required"
+      },
+      "description_textarea": {
+        "label": "Description",
+        "required_error": "Field is required",
+        "at_least_error": "Description must have at least {number} letters",
+        "at_most_error": "Description must have at most {number} letters"
+      },
+      "status_select": {
+        "label": "Status",
+        "new": "new",
+        "scheduled": "scheduled",
+        "started": "started",
+        "suspended": "suspended",
+        "cancelled": "cancelled",
+        "done": "done"
+      },
+      "public": {
+        "label": "Public",
+        "tooltip": "Open to data collection systems"
+      },
+      "buttons": {
+        "discard": "Discard",
+        "apply": "Apply"
+      }
+    },
+    "vtour": {
+      "start_planning": "Start planning a new aim",
+      "enter_name": "Enter goal name",
+      "improve_ads_service": "Tick to improve contextual Ads service"
+    }
+  },
+  "templates": {
+    "templates": "Templates",
+    "header": {
+      "template": "Template",
+      "accessible_by_id": "Accessible by id"
+    },
+    "messages": {
+      "cancelled": "Cancelled",
+      "done": "Done",
+      "error": "Error"
+    },
+    "action_icons": {
+      "add": "add",
+      "import": "import",
+      "edit": "edit",
+      "delete": "delete",
+      "use": "use"
+    },
+    "dialogs": {
+      "create": {
+        "title": "Create",
+        "description": "Create a New Template",
+        "title_input": {
+          "label": "Title",
+          "required_error": "Field is required",
+          "at_least_error": "Title must have at least {number} letters",
+          "at_most_error": "Title must have at most {number} letters"
+        },
+        "description_textarea": {
+          "label": "Description",
+          "required_error": "Field is required",
+          "at_least_error": "Description must have at least {number} letters",
+          "at_most_error": "Description must have at most {number} letters"
+        },
+        "public": {
+          "label": "Public",
+          "tooltip": "Accessible by Id"
+        },
+        "common": {
+          "ok": "OK",
+          "cancel": "Cancel"
+        }
+      },
+      "import": {
+        "title": "Import",
+        "description": "Import template by global id",
+        "id_input": {
+          "label": "Id:",
+          "placeholder": "Import Template Id",
+          "required_error": "Field is required"
+        },
+        "common": {
+          "ok": "OK",
+          "cancel": "Cancel"
+        }
+      },
+      "edit": {
+        "title": "Edit",
+        "description": "Edit Selected Template"
+      },
+      "delete": {
+        "title": "Delete",
+        "description": "Delete Selected Template"
+      },
+      "use": {
+        "title": "Use",
+        "description": "Add a copy of the selected template to the main tree?"
+      },
+      "buttons": {
+        "ok": "OK",
+        "cancel": "Cancel"
+      }
+    }
+  },
+  "signin": {
+    "signin": "Signin",
+    "header": "Visualize Your Aims and Achievements",
+    "description": "MySkillsOrganizer is designed to manage your achievements and creative tasks. Add target nodes and dependencies between them, share the map of your self-development with the whole world!",
+    "vtour": {
+      "signinGoogle": "Sign in to your Google Account"
+    }
+  },
+  "about": {
+    "about": "About",
+    "description_p1": "The most valuable product of any useful work is ourselves: our knowledge, abilities, human qualities, inner world.",
+    "description_p2": "The sum of the abilities of all people forms the true wealth of mankind, the \"total Human\".",
+    "description_p3": "MySkillsOrganizer allows you to visualize your personal tree of aims and achievements, share patterns of such trees.",
+    "description_p4": "And remember: the most significant aims for our self-development are those in the process of achieving which we create affordable utility for others, thereby helping to save life time and develop freely for everyone!"
+  }
+}

@@ -2,36 +2,36 @@
 .content-wrapper
   section
     .container
-      h1.ui-title-1 Home - Put your achievements and aims here
+      h1.ui-title-1 {{$t('home.header')}}
       div
         span.ui-square.color-new
         = ' '
-        span New
+        span {{$t('home.marking.new')}}
         = ' '
         span.ui-square.color-scheduled
         = ' '
-        span Scheduled (some deps are not satisfied)
+        span {{$t('home.marking.scheduled_not_satisfied')}}
         = ' '
         span.ui-square.color-scheduled-deps-satisfied
         = ' '
-        span Scheduled (no deps or they are satisfied)
+        span {{$t('home.marking.scheduled_satisfied')}}
       = ' '
       div
         span.ui-square.color-started
         = ' '
-        span Started
+        span {{$t('home.marking.started')}}
         = ' '
         span.ui-square.color-suspended
         = ' '
-        span Suspended
+        span {{$t('home.marking.suspended')}}
         = ' '
         span.ui-square.color-cancelled
         = ' '
-        span Cancelled
+        span {{$t('home.marking.cancelled')}}
         = ' '
         span.ui-square.color-done
         = ' '
-        span Done
+        span {{$t('home.marking.done')}}
   // Секция, содержащая экземпляр пользовательского компонента FabricCanvas
   // для отображения основного дерева целей и задач
   section#c(ref='canvasContainer')
