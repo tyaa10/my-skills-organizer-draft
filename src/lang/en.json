@@ -173,5 +173,9 @@
     "description_p2": "The sum of the abilities of all people forms the true wealth of mankind, the \"total Human\".",
     "description_p3": "MySkillsOrganizer allows you to visualize your personal tree of aims and achievements, share patterns of such trees.",
     "description_p4": "And remember: the most significant aims for our self-development are those in the process of achieving which we create affordable utility for others, thereby helping to save life time and develop freely for everyone!"
+  },
+  "video-tutorial-button": {
+    "inner-text": "Video Tutorial",
+    "url": "https://youtu.be/UiH3Yk4u-f0"
   }
 }

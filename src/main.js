@@ -21,14 +21,14 @@ import VueCookies from 'vue-cookies'
 import VTooltip from 'v-tooltip'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faUserSecret, faFileImport, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faUserSecret, faFileImport, faEdit, faTrash, faPlay } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 import { i18n } from './plugins/i18n'
 
 import FlagIcon from 'vue-flag-icon'
 
-library.add(faUserSecret, faFileImport, faEdit, faTrash)
+library.add(faUserSecret, faFileImport, faEdit, faTrash, faPlay)
 
 require('vue-tour/dist/vue-tour.css')
 

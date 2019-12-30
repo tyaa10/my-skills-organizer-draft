@@ -7,8 +7,12 @@
           h1.ui-title-1 {{$t('signin.header')}}
           p {{$t('signin.description')}}
         // Ячейка сетки для отображения формы входа в учетную запись Гугл
+        // и ссылки на обучающее видео
         .col-xs-12.col-md-4
+          // Контейнер для рендеринга стандартного интерфейса аутентификации Гугл
           #firebaseui-auth-container
+          // Кнопка просмотра обучающего видео
+          VideoTutorialButton(:url="$t('video-tutorial-button.url')")
           v-tour(name='signin' :steps='steps' :callbacks="signinTourCallbacks")
             template(slot-scope='tour')
               transition(name='fade')
@@ -19,8 +23,12 @@
 import firebase from 'firebase'
 import firebaseui from 'firebaseui'
 import '../../../node_modules/firebaseui/dist/firebaseui.css'
+import VideoTutorialButton from '../Common/VideoTutorialButton'
 export default {
   name: 'signin',
+  components: {
+    VideoTutorialButton
+  },
   data () {
     return {
       signinTourCallbacks: {
@@ -64,7 +72,6 @@ export default {
     }
   }
 }
-
 </script>
 
 <style lang="stylus" scoped>

@@ -8,11 +8,16 @@
       p {{$t('about.description_p3')}}
       p
         strong {{$t('about.description_p4')}}
+  section
+    .container
+      // Кнопка просмотра обучающего видео
+      VideoTutorialButton(:url="$t('video-tutorial-button.url')")
 </template>
 <script>
+import VideoTutorialButton from './Common/VideoTutorialButton'
 export default {
-  data () {
-    return {}
+  components: {
+    VideoTutorialButton
   }
 }
 </script>
