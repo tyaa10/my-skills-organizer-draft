@@ -550,6 +550,14 @@ export default {
     // Обработчик клика по кнопке "Сделано" в форме создания/редактирования узла
     applyNodeDataClick () {
       if (this.formMode === 'create') {
+        // Находим координату высоты у самого нижнего из имеющихся узлов
+        let maxNodeTop = this.elems[0].top
+        this.elems.forEach(n => {
+          if (n.top > maxNodeTop) {
+            maxNodeTop = n.top
+          }
+        })
+        // Добавляем новый узел в хранилище
         this.$store.dispatch(this.actionNames.newNode, {
           title: this.selectedNode.title,
           type: this.selectedNode.type,
@@ -558,10 +566,11 @@ export default {
           status: this.selectedNode.status,
           dependenciesSatisfied: true,
           radius: 50,
-          left: 0,
-          top: 0
+          left: this.widthCenter,
+          top: maxNodeTop + 100
         })
           .then(() => {
+            window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight)
             this.submitStatus = 'OK'
           })
           .catch(err => {
@@ -856,8 +865,6 @@ export default {
             maxNodeTop = n.top
           }
         })
-        console.log('maxNodeTop', maxNodeTop)
-        console.log('this.height', this.$parent.$el.clientHeight)
         if (maxNodeTop + 100 > canvasHeight) {
           canvasHeight = maxNodeTop + 100
         }
@@ -868,15 +875,11 @@ export default {
       // console.log('[Vue Tour] A custom previousStep callback has been called on step ' + (currentStep + 1))
     },
     NextStepCallback (currentStep) {
-      // console.log('[Vue Tour] A custom nextStep callback has been called on step ' + (currentStep + 1))
       if (currentStep === 0) {
-        // console.log('[Vue Tour] A custom nextStep callback has been called from step 2 to step 3')
         showSidebar()
       }
-      // console.log(this.$tours['canvas'].isLast)
     },
     StopCallback () {
-      // console.log(this.$tours['canvas'].isLast)
       if (this.$tours['canvas'].isLast) {
         this.$cookies.set('vtour_fabric_canvas_finished', true)
       }
