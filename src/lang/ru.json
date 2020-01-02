@@ -24,7 +24,8 @@
       "edit_node": "Редактировать узел",
       "add_dependency": "Добавить зависимость",
       "delete_node": "Удалить узел",
-      "delete_dependency": "Удалить зависимость"
+      "delete_dependency": "Удалить зависимость",
+      "node_description": "Описание"
     },
     "dialogs": {
       "delete_node": {

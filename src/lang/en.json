@@ -24,7 +24,8 @@
       "edit_node": "Edit Node",
       "add_dependency": "Add Dependency",
       "delete_node": "Delete Node",
-      "delete_dependency": "Delete Dependency"
+      "delete_dependency": "Delete Dependency",
+      "node_description": "Description"
     },
     "dialogs": {
       "delete_node": {

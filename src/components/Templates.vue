@@ -241,7 +241,6 @@ export default {
       this.tempDeleteDialogHandler.call()
     },
     importTempClick () {
-      console.log('importTempClick')
       this.tempFormMode = 'import'
       this.tempImportDialogHandler = uiMessage(this.tempImportDialogItOk, this.tempImportDialogItCancel, 'templatesModal')
       this.tempImportDialogHandler.call()

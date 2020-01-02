@@ -16,6 +16,7 @@
     // что сейчас выбран один узел или одна связь
     vue-context(ref='menu' v-if="checkNode || checkDep")
       ul
+        li#showNodeDescriptionContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkNode") {{$t('fabric_canvas.context_menu.node_description')}}
         li#editNodeContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkNode") {{$t('fabric_canvas.context_menu.edit_node')}}
         li#addDependencyContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkNode") {{$t('fabric_canvas.context_menu.add_dependency')}}
         li#deleteNodeContextMenuItem(@click='onContextMenuClick($event.target.id)' v-if="checkNode") {{$t('fabric_canvas.context_menu.delete_node')}}
@@ -33,6 +34,14 @@
         .ui-messageBox__footer
           .button.button-light.ui-messageBox-cancel {{$t('fabric_canvas.dialogs.common.cancel')}}
           .button.button-primary.ui-messageBox-ok {{$t('fabric_canvas.dialogs.common.ok')}}
+    // Dialog Box - Description of the selected node
+    .ui-messageBox__wrapper#fabricCanvasNodeDescriptionModal
+      .ui-messageBox.fadeInDown
+        .ui-messageBox__header
+          span.messageBox-title(v-if="selectedNodeId") {{selectedNode.title}}
+          span.button-close.ui-messageBox-close
+        .ui-messageBox__content.custom-content-scroll
+          span(v-if="selectedNodeId") {{selectedNode.description}}
     // Главная кнопка экрана: начать добавление нового узла
     .fab(@click='addNodeClick') +
     .sidebar-open-button
@@ -131,6 +140,7 @@ export default {
       selectedDepId: null,
       nodeDeleteDialogHandler: null,
       depDeleteDialogHandler: null,
+      showNodeDescriptionDialogHandler: null,
       selectedNode: {
         title: '',
         description: '',
@@ -505,6 +515,10 @@ export default {
       } else if (id === 'deleteDepContextMenuItem') {
         this.depDeleteDialogHandler = uiMessage(this.depDeleteDialogItOk, this.depDeleteDialogItCancel, 'fabricCanvasModal')
         this.depDeleteDialogHandler.call()
+      } else if (id === 'showNodeDescriptionContextMenuItem') {
+        this.selectedNode = this.elems.find(elem => elem.id === this.selectedNodeId)
+        this.showNodeDescriptionDialogHandler = uiMessage(null, null, 'fabricCanvasNodeDescriptionModal')
+        this.showNodeDescriptionDialogHandler.call()
       }
     },
     nodeDeleteDialogItOk () {
@@ -887,3 +901,10 @@ export default {
   }
 }
 </script>
+
+<style scoped lang="stylus">
+  .custom-content-scroll
+    max-width 350px
+    word-wrap break-word
+    // overflow scroll
+</style>
