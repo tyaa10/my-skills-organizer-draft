@@ -83,6 +83,9 @@
       "start_planning": "Start planning a new aim",
       "enter_name": "Enter goal name",
       "improve_ads_service": "Tick to improve contextual Ads service"
+    },
+    "dep_creation": {
+      "select_parent_node": "Select parent node"
     }
   },
   "templates": {

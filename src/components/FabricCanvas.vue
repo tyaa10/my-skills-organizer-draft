@@ -487,7 +487,7 @@ export default {
         // Выбран пункт контекстного меню области рисования "Добавить зависимость"
         var hintText =
           new fabric.Text(
-            'Select parent node'
+            this.$t('fabric_canvas.dep_creation.select_parent_node')
             , {
               top: this.canvas.getActiveObject().top + 100,
               left: this.canvas.getActiveObject().left,
