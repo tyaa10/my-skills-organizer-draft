@@ -10,14 +10,14 @@
     span.message-title {{$t('templates.messages.error')}}
   // Секция, содержащая экземпляр пользовательского компонента FabricCanvas
   // для отображения дерева целей и задач текущего шаблона
-  .templateData(v-if="currentUserId && currentTemplateId && selectedTemplate.access")
+  .templateData(v-if="currentUserId && currentTemplateId && selectedTemplate.title")
     span.ui-title-4 {{$t('templates.header.template')}}:
     = ' '
     span.ui-text-regular "{{selectedTemplate.title}}".
     = ' '
-    span.ui-title-4 {{$t('templates.header.accessible_by_id')}}:
+    span.ui-title-4(v-if="selectedTemplate.access") {{$t('templates.header.accessible_by_id')}}:
     = ' '
-    span.ui-text-regular {{currentUserId}}@{{currentTemplateId}}
+    span.ui-text-regular(v-if="selectedTemplate.access") {{currentUserId}}@{{currentTemplateId}}
   section#c(ref='canvasContainer' @click='hideRightSidebar')
     FabricCanvas(:elems-getter="elemsGetter", :deps-getter="depsGetter", :action-names="actionNames", ref="fabricCanvasHandler")
   .right-sidebar.full
@@ -51,7 +51,7 @@
         span.button-close.ui-messageBox-close
       .ui-messageBox__content
         span {{formStaticContent[tempFormMode].description}}
-        // Форма создания / редактирования Template.
+        // /* Форма создания / редактирования Template. */
         // Подавление стандартной отправки пост-запроса формой
         form(v-if="tempFormMode == 'create' || tempFormMode == 'edit'" v-on:submit.prevent='')
           // Привязка блока с полем ввода к свойству модели
@@ -277,8 +277,7 @@ export default {
     },
     tempCreateDialogItCancel () {
       // Вызываем в хранилище действие удаления выделенного узла
-      // console.log('tempCreateDialogItCancel')
-      this.tempCreateDialogHandler = null
+      // this.tempCreateDialogHandler = null
       showMessage('#cancelledMessage')
     },
     tempEditDialogItOk () {

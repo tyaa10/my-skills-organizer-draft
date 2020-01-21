@@ -186,8 +186,9 @@ function uiMessage (okButtonHandler, cancelButtonHandler, modalName) { // eslint
     newElement.addEventListener('click', function () {
       // Exit
       closeMessageDialog(i)
-      // Ok func
+      // Cancel func
       // messageDialogItCancel()
+      // console.log('Cancel i = ', i)
       dialogButtonsHandlers['cancel'].call()
     })
   })
@@ -201,6 +202,7 @@ function uiMessage (okButtonHandler, cancelButtonHandler, modalName) { // eslint
       closeMessageDialog(i)
       // Ok func
       // messageDialogItOk()
+      // console.log('Ok i = ', i)
       dialogButtonsHandlers['ok'].call()
     })
   })
@@ -208,7 +210,7 @@ function uiMessage (okButtonHandler, cancelButtonHandler, modalName) { // eslint
   // function showMessageDialog (i) {
   function showMessageDialog (modalName) {
     // Becouse [i]
-    console.log('showMessageDialog modalName = ' + modalName)
+    // console.log('showMessageDialog modalName = ' + modalName)
     // var messageDialog = document.getElementsByClassName('ui-messageBox__wrapper')[i]
     var messageDialog = document.querySelectorAll('.ui-messageBox__wrapper#' + modalName)[0]
     messageDialog.style.display = 'flex'
@@ -216,10 +218,12 @@ function uiMessage (okButtonHandler, cancelButtonHandler, modalName) { // eslint
 
   function closeMessageDialog (i) {
     // Becouse [i]
-    var messageDialog = document.getElementsByClassName('ui-messageBox__wrapper')[i]
-    messageDialog.style.display = 'none'
+    // console.log('ui-messageBox__wrapper = ', document.getElementsByClassName('ui-messageBox__wrapper'))
+    var messageDialogs = document.getElementsByClassName('ui-messageBox__wrapper')
+    for (var j = 0; j < messageDialogs.length; ++j) {
+      messageDialogs[j].style.display = 'none'
+    }
   }
-
   return function () {
     // showMessageDialog(0)
     showMessageDialog(modalName)

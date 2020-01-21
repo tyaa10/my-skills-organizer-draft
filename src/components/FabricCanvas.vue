@@ -54,7 +54,7 @@
     .sidebar
       .container
         .sidebar-content
-          // Форма создания / редактирования узла.
+          // /*Форма создания / редактирования узла. */
           // Подавление стандартной отправки пост-запроса формой
           form(v-on:submit.prevent='')
             // Привязка блока с полем ввода к свойству модели
@@ -564,13 +564,19 @@ export default {
     // Обработчик клика по кнопке "Сделано" в форме создания/редактирования узла
     applyNodeDataClick () {
       if (this.formMode === 'create') {
-        // Находим координату высоты у самого нижнего из имеющихся узлов
-        let maxNodeTop = this.elems[0].top
-        this.elems.forEach(n => {
-          if (n.top > maxNodeTop) {
-            maxNodeTop = n.top
-          }
-        })
+        // Находим координату высоты у самого нижнего из имеющихся узлов,
+        // если есть хотя бы один узел,
+        // иначе - оставляем значение середины области рисования по высоте
+        let maxNodeTop = 100
+        if (this.elems[0]) {
+          maxNodeTop = this.elems[0].top
+          this.elems.forEach(n => {
+            if (n.top > maxNodeTop) {
+              maxNodeTop = n.top
+            }
+          })
+          maxNodeTop += 200
+        }
         // Добавляем новый узел в хранилище
         this.$store.dispatch(this.actionNames.newNode, {
           title: this.selectedNode.title,
@@ -580,8 +586,8 @@ export default {
           status: this.selectedNode.status,
           dependenciesSatisfied: true,
           radius: 50,
-          left: this.widthCenter,
-          top: maxNodeTop + 100
+          left: this.widthCenter - 100,
+          top: maxNodeTop
         })
           .then(() => {
             window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight)
