@@ -5,6 +5,8 @@
 ## Build Setup
 
 ``` bash
+# fill in the file "/src/helpers/firebaseConfig.js" with your firebase credentials
+
 # install dependencies
 npm install
 
